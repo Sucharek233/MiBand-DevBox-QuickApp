@@ -1,0 +1,357 @@
+<template>
+    <div class="page">
+
+        <!-- Title -->
+        <text class="header">DevBox</text>
+
+        <!-- Status -->
+        <div class="status-group">
+
+            <input
+                type="button"
+                id="connectBtn"
+                class="status-btn {{uiData.connectionClass}}"
+                value="{{uiData.connectionText}}"
+                @click="connect"
+            />
+
+            <input
+                type="button"
+                class="status-btn {{uiData.luaClass}}"
+                value="{{uiData.luaText}}"
+                @click="pingLua"
+            />
+
+        </div>
+
+        <!-- Logs -->
+        <div class="log-panel">
+
+            <div class="log-header">
+                <text class="log-title">Logs</text>
+
+                <text
+                    class="clear-btn"
+                    @click="clearLogs"
+                >
+                    Clear
+                </text>
+            </div>
+
+            <text class="log-area">{{uiData.logText}}</text>
+            
+
+        </div>
+
+        <!-- Bottom button -->
+        <input
+            type="button"
+            class="exit-btn"
+            value="Exit"
+            @click="exit"
+        />
+
+    </div>
+</template>
+
+<script>
+    import InterconnectClient from "../../communication/interconnect";
+    import PromiseBrightness from "../../helpers/promiseBrightness"
+
+    import PromiseFile from "../../helpers/promiseFile"
+
+    import Mailbox from "../../communication/mailbox"
+    import Paths from "../../constants/paths"
+
+    import Router from "../../router/router";
+
+    // Activities
+    import Terminal from "../../router/activities/terminal"
+    import QJSShell from "../../router/activities/quickjs"
+    import FileManager from "../../router/activities/fileManager"
+    import Sensors from "../../router/activities/sensors/sensors"
+    import SensorsLua from "../../router/activities/sensorsLua"
+    import ModuleCompatibility from "../../router/activities/moduleCompatibility"
+    import Ping from "../../router/activities/ping"
+    import LuaShell from "../../router/activities/luaShell"
+    import SystemInfo from "../../router/activities/systemInfo"
+
+    import base64 from "../../libs/base64.min.js"
+    import ReadRawFile from "../../helpers/readRawFile"
+
+    export default {
+        private: {
+            // for UI
+            uiData: {
+                connectionText: "Connect",
+                connectionClass: "status-idle",
+
+                luaText: "Ping Lua",
+                luaClass: "status-idle",
+
+                logText: "",
+                logTextMax: 8000
+            },
+
+            client: null,
+            brightness: PromiseBrightness,
+            file: PromiseFile,
+            base64: base64,
+
+            router: new Router(),
+            mailbox: new Mailbox(Paths.mailbox, 1000, false),
+
+            activityClasses: {
+
+            },
+
+            read: ReadRawFile
+        },
+
+        // UI stuff
+        setConnectionState(state) {
+            switch (state) {
+                case "idle":
+                    this.uiData.connectionText = "Connect";
+                    this.uiData.connectionClass = "status-idle";
+                    break;
+
+                case "connecting":
+                    this.uiData.connectionText = "Connecting...";
+                    this.uiData.connectionClass = "status-busy";
+                    break;
+
+                case "connected":
+                    this.uiData.connectionText = "Connected";
+                    this.uiData.connectionClass = "status-success";
+                    break;
+
+                case "disconnected":
+                    this.uiData.connectionText = "Disconnected";
+                    this.uiData.connectionClass = "status-disconnected";
+                    break;
+
+                case "error":
+                    this.uiData.connectionText = "Connection Failed";
+                    this.uiData.connectionClass = "status-error";
+                    break;
+            }
+        },
+        setLuaState(state, ms = 0) {
+            switch (state) {
+                case "idle":
+                    this.uiData.luaText = "Ping Lua";
+                    this.uiData.luaClass = "status-idle";
+                    break;
+
+                case "pinging":
+                    this.uiData.luaText = "Pinging...";
+                    this.uiData.luaClass = "status-busy";
+                    break;
+
+                case "online":
+                    this.uiData.luaText = `Lua OK • ${ms} ms`;
+                    this.uiData.luaClass = "status-success";
+                    break;
+
+                case "error":
+                    this.uiData.luaText = "Lua Fail";
+                    this.uiData.luaClass = "status-error";
+                    break;
+            }
+        },
+        appendLog(message) {
+            console.log(message); // for now :)
+
+            // const line =
+            //     `[${new Date().toLocaleTimeString()}] ${message}\n`;
+
+            const line =
+                `${message}\n`;
+
+            this.uiData.logText = line + this.uiData.logText;
+
+            if (this.uiData.logText.length > this.uiData.logTextMax) {
+                this.uiData.logText = this.uiData.logText.substring(0, this.uiData.logTextMax);
+            }
+        },
+        clearLogs() {
+            this.uiData.logText = "";
+        },
+        exit() {
+            this.$app.exit();
+        },
+        async pingLua() {
+            this.setLuaState("pinging");
+            const result = await this.activityClasses.ping.ping();
+            if (result.state == "done") {
+                this.setLuaState("online", result.totalTime);
+                this.appendLog(`Lua service responded in ${result.totalTime}ms (ack: ${result.ackTime}ms)`);
+            } else if (result.state == "timeout") {
+                this.setLuaState("error");
+                this.appendLog(`Lua service ping timeout`)
+            } else if (result.state == "error") {
+                this.setLuaState("error");
+                this.appendLog(`Lua service ping failed: ${result.msg}`)
+            }
+        },
+
+        async onInit() {
+            aiot.appCtx = this;
+
+            this.client = new InterconnectClient({
+                debug: false
+            });
+
+            this.client.onOpen(() => {
+                this.appendLog("Connected");
+                this.setConnectionState("connected");
+            });
+
+            this.client.onClose(() => {
+                this.appendLog("Disconnected");
+                this.setConnectionState("disconnected");
+            });
+
+            this.client.onError(console.error);
+
+            this.client.onMessage((msg) => {
+                this.messageReceived(msg);
+                // this.appendLog(msg);
+            });
+
+            await this.mailbox.init();
+            this.setupRouter();
+        },
+
+        setupRouter() {
+            const terminal = new Terminal(this.mailbox);
+            this.router.register(
+                Terminal.type,
+                Terminal.needsLua,
+                terminal.handle.bind(terminal)
+            );
+            this.activityClasses.terminal = terminal;
+
+            const qjs = new QJSShell(this, global);
+            this.router.register(
+                QJSShell.type,
+                QJSShell.needsLua,
+                qjs.handle.bind(qjs)
+            );
+            this.activityClasses.qjs = qjs;
+
+            const io = new FileManager(this.mailbox);
+            this.router.register(
+                FileManager.type,
+                FileManager.needsLua,
+                io.handle.bind(io)
+            );
+            this.activityClasses.io = io;
+
+            const sensors = new Sensors(this.client);
+            this.router.register(
+                Sensors.type,
+                Sensors.needsLua,
+                sensors.handle.bind(sensors)
+            );
+            this.activityClasses.sensors = sensors;
+
+            const sensorsLua = new SensorsLua(this.mailbox, this.client);
+            this.router.register(
+                SensorsLua.type,
+                SensorsLua.needsLua,
+                sensorsLua.handle.bind(sensorsLua)
+            );
+            this.activityClasses.sensorsLua = sensorsLua;
+
+            const modules = new ModuleCompatibility(qjs);
+            this.router.register(
+                ModuleCompatibility.type,
+                ModuleCompatibility.needsLua,
+                modules.handle.bind(modules)
+            );
+            this.activityClasses.modules = modules;
+
+            const ping = new Ping(this.mailbox);
+            this.router.register(
+                Ping.type,
+                Ping.needsLua,
+                ping.handle.bind(ping)
+            );
+            this.activityClasses.ping = ping;
+
+            const luaShell = new LuaShell(this.mailbox);
+            this.router.register(
+                LuaShell.type,
+                LuaShell.needsLua,
+                luaShell.handle.bind(luaShell)
+            );
+            this.activityClasses.luaShell = luaShell;
+
+            const sysInfo = new SystemInfo();
+            this.router.register(
+                SystemInfo.type,
+                SystemInfo.needsLua,
+                sysInfo.handle.bind(sysInfo)
+            );
+            this.activityClasses.sysInfo = sysInfo;
+        },
+
+        async connect() {
+            try {
+                await this.client.connect();
+                this.setConnectionState("connecting");
+            } catch (e) {
+                this.appendLog(e.message);
+                this.setConnectionState("error");
+            }
+        },
+
+        async messageReceived(msg) {
+            const msgObj = JSON.parse(msg);
+            const type = msgObj?.type;
+            this.appendLog(`Received request for ${type}`);
+            // console.log(msgObj);
+            
+            if (!type) {
+                this.appendLog(`No type specified!`);
+                return;
+            } else if (
+                !Object.keys(this.router.routes).includes(type)
+            ) {
+                this.appendLog(`Unknown type: ${type}`);
+                return;
+            }
+
+            const targetRoute = this.router.routes[type];
+            const needsLua = targetRoute.needsLua ?? false;
+            if (needsLua) await this.brightness.setKeepScreenOn(true);
+
+            try {
+                const result = await targetRoute.handler(msgObj);
+                if (needsLua) await this.brightness.setKeepScreenOn(false);
+
+                console.log("Res", JSON.parse(JSON.stringify(result)));
+                this.appendLog(`${type} finished, sending...`);
+                await this.client.send(result);
+            } catch (e) {
+                if (needsLua) await this.brightness.setKeepScreenOn(false);
+                // console.log(e.message, e.stack);
+                this.appendLog(`${type} failed: ${e.message}`);
+
+                // last resort
+                await this.client.send({
+                    type: "interconnect",
+                    state: "error",
+                    message: e.message,
+                    stack: e.stack
+                });
+            }
+        }
+    }
+</script>
+
+<style>
+    @import './css/style.css';
+</style>

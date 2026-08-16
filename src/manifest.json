@@ -1,0 +1,103 @@
+{
+    "package": "com.sucharek.miband_interconnect_test",
+    "name": "interconnect-demo-2",
+    "versionName": "1.0.0",
+    "versionCode": 1,
+    "minPlatformVersion": 1200,
+    "icon": "/common/logo.png",
+    "simulationVersion": "default",
+    "deviceTypeList": [
+        "watch"
+    ],
+    "features": [
+        {"name": "service.account"},
+        {"name": "service.alipay"},
+        {"name": "service.exchange"},
+        {"name": "service.health"},
+        {"name": "service.pay"},
+        {"name": "service.push"},
+        {"name": "service.qqaccount"},
+        {"name": "service.share"},
+        {"name": "service.stats"},
+        {"name": "service.wbaccount"},
+        {"name": "service.wxaccount"},
+        {"name": "service.wxpay"},
+        {"name": "service.texttoaudio"},
+        {"name": "service.ad"},
+
+        {"name": "system.alarm"},
+        {"name": "system.app"},
+        {"name": "system.audio"},
+        {"name": "system.barcode"},
+        {"name": "system.battery"},
+        {"name": "system.bluetooth"},
+        {"name": "system.brightness"},
+        {"name": "system.calendar"},
+        {"name": "system.cipher"},
+        {"name": "system.clipboard"},
+        {"name": "system.contact"},
+        {"name": "system.crypto"},
+        {"name": "system.configuration"},
+        {"name": "system.device"},
+        {"name": "system.event"},
+        {"name": "system.fetch"},
+        {"name": "system.file"},
+        {"name": "system.geolocation"},
+        {"name": "system.image"},
+        {"name": "system.interconnect"},
+        {"name": "system.media"},
+        {"name": "system.network"},
+        {"name": "system.notification"},
+        {"name": "system.package"},
+        {"name": "system.prompt"},
+        {"name": "system.record"},
+        {"name": "system.request"},
+        {"name": "system.resident"},
+        {"name": "system.router"},
+        {"name": "system.sensor"},
+        {"name": "system.share"},
+        {"name": "system.shortcut"},
+        {"name": "system.sms"},
+        {"name": "system.storage"},
+        {"name": "system.vibrator"},
+        {"name": "system.volume"},
+        {"name": "system.websocketfactory"},
+        {"name": "system.webview"},
+        {"name": "system.wifi"},
+        {"name": "system.zip"},
+        {"name": "system.configuration"},
+        {"name": "system.telecom"},
+        {"name": "system.keyguard"},
+        {"name": "system.downloadtask"},
+        {"name": "system.uploadtask"},
+        {"name": "system.requesttask"},
+        {"name": "system.nfc"},
+        {"name": "system.screenshot"},
+
+        {"name": "hap.video"}
+    ],
+    "config": {
+        "logLevel": "log",
+        "designWidth": 480,
+        "background": {
+            "features":[
+                "system.audio",
+                "system.request",
+                "system.geolocation"
+            ]
+        }
+    },
+    "permissions": [
+        {"name": "hapjs.permission.LOCATION"},
+        {"name": "hapjs.permission.DEVICE_INFO"}
+    ],
+    "router": {
+        "entry": "pages/index",
+        "pages": {
+            "pages/index": {
+                "component": "index"
+            }
+        }
+    },
+    "minAPILevel": 1
+}
