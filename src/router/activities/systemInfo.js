@@ -1,3 +1,4 @@
+import MailboxState from "../../constants/mailboxStates";
 import promiseDevice from "../../helpers/prosimeDevice";
 
 export default class SystemInfo {
@@ -26,7 +27,7 @@ export default class SystemInfo {
 
         return {
             type: SystemInfo.type,
-            state: "done",
+            state: MailboxState.DONE,
             res: {
                 main,
                 storage,

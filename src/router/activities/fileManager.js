@@ -1,3 +1,5 @@
+import MailboxState from "../../constants/mailboxStates";
+
 export default class FileManager {
     static type = "io";
     static needsLua = true;
@@ -18,7 +20,7 @@ export default class FileManager {
 
         return {
             type: FileManager.type,
-            state: "error",
+            state: MailboxState.ERROR,
             msg: errMsg
         }
     }
@@ -33,7 +35,7 @@ export default class FileManager {
             return {
                 type: FileManager.type,
                 res: result,
-                state: "done"
+                state: MailboxState.DONE
             }
         } catch (e) {
             return this.handleFail(e);

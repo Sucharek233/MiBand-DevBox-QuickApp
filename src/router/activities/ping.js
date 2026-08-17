@@ -1,3 +1,5 @@
+import MailboxState from "../../constants/mailboxStates";
+
 export default class Ping {
     static type = "ping";
     static needsLua = true;
@@ -33,7 +35,7 @@ export default class Ping {
 
             return {
                 type: Ping.type,
-                state: "done",
+                state: MailboxState.DONE,
                 startTime: startTime,
                 ackTime: ackTime,
                 totalTime: totalTime
@@ -43,12 +45,12 @@ export default class Ping {
             if (e.message == "Mailbox timeout") {
                 return {
                     type: Ping.type,
-                    state: "timeout"
+                    state: MailboxState.TIMEOUT
                 }
             }
             return {
                 type: Ping.type,
-                state: "error",
+                state: MailboxState.ERROR,
                 msg: e.message,
                 stack: e.stack
             }

@@ -1,4 +1,5 @@
 import PromiseFile from "../../helpers/promiseFile"
+import MailboxState from "../../constants/mailboxStates";
 
 export default class SensorsLua {
     static type = "sensorsLua";
@@ -28,7 +29,7 @@ export default class SensorsLua {
             const sensorList = await this.getSensorList(type);
             return {
                 type: SensorsLua.type,
-                state: "done",
+                state: MailboxState.DONE,
                 res: sensorList
             }
         } else if (type == "sub") {
@@ -66,7 +67,7 @@ export default class SensorsLua {
         if (result.sensorState == "err") {
             return {
                 type: SensorsLua.type,
-                state: "error",
+                state: MailboxState.ERROR,
                 result: result.res
             }
         }
@@ -109,7 +110,7 @@ export default class SensorsLua {
     async sendData(rawReading) {
         const result = {
             type: SensorsLua.type,
-            state: "stream",
+            state: MailboxState.STREAM,
             samples: rawReading
         };
         console.log(result);

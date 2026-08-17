@@ -4,7 +4,8 @@ const MailboxState = Object.freeze({
     RUNNING: "running",
     DONE: "done",
     ERROR: "error",
-    TIMEOUT: "timeout"
+    TIMEOUT: "timeout",
+    STREAM: "stream"
 });
 
 export default MailboxState;

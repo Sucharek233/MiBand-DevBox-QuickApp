@@ -1,4 +1,5 @@
 import app from "@system.app"
+import MailboxState from "../../constants/mailboxStates";
 
 export default class ModuleCompatibility {
     static type = "modules";
@@ -25,14 +26,14 @@ export default class ModuleCompatibility {
             } else {
                 return {
                     type: ModuleCompatibility.type,
-                    state: "error",
+                    state: MailboxState.ERROR,
                     msg: "No type specified"
                 };
             }
         } catch (e) {
             return {
                 type: ModuleCompatibility.type,
-                state: "error",
+                state: MailboxState.ERROR,
                 msg: e.message,
                 stack: e.stack
             };
@@ -44,7 +45,7 @@ export default class ModuleCompatibility {
         if (typeof(app.canIUse) != "function") {
             return {
                 type: ModuleCompatibility.type,
-                state: "error",
+                state: MailboxState.ERROR,
                 msg: "Incompatible"
             };
         }
@@ -55,7 +56,7 @@ export default class ModuleCompatibility {
         if (!modules || typeof(modules) != "object") {
             return {
                 type: ModuleCompatibility.type,
-                state: "error",
+                state: MailboxState.ERROR,
                 msg: "Invalid modules list"
             };
         }
@@ -68,7 +69,7 @@ export default class ModuleCompatibility {
 
         return {
             type: ModuleCompatibility.type,
-            state: "done",
+            state: MailboxState.DONE,
             res: result
         };
     }
@@ -77,7 +78,7 @@ export default class ModuleCompatibility {
         if (!module || module.trim() == "") {
             return {
                 type: ModuleCompatibility.type,
-                state: "error",
+                state: MailboxState.ERROR,
                 msg: "Invalid module"
             };
         }
@@ -87,7 +88,7 @@ export default class ModuleCompatibility {
         
         return {
             type: ModuleCompatibility.type,
-            state: "done",
+            state: MailboxState.DONE,
             res: functions
         };
     }

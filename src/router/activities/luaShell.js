@@ -21,13 +21,13 @@ export default class LuaShell {
 
             const state = result.luaState;
             const prints = result.print;
-            if (state == "error") {
+            if (state == MailboxState.ERROR) {
                 const reason = result.reason;
                 const message = result.msg;
 
                 const errResult = {
                     type: LuaShell.type,
-                    state: "error",
+                    state: MailboxState.ERROR,
                     reason: reason,
                     msg: message
                 }
@@ -40,14 +40,14 @@ export default class LuaShell {
 
             return {
                 type: LuaShell.type,
-                state: "done",
+                state: MailboxState.DONE,
                 res: result.res,
                 print: prints
             }
         } catch (e) {
             return {
                 type: LuaShell.type,
-                state: "error",
+                state: MailboxState.ERROR,
                 msg: e.message,
                 stack: e.stack
             }

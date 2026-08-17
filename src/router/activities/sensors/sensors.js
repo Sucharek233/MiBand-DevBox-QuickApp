@@ -1,4 +1,5 @@
 import SensorProvider from "./providers/system.sensor";
+import MailboxState from "../../../constants/mailboxStates";
 
 export default class Sensors {
     static type = "sensors";
@@ -41,7 +42,7 @@ export default class Sensors {
         const sensorList = await this.sensorProvider.gatherSensorData();
         return {
             type: Sensors.type,
-            state: "done",
+            state: MailboxState.DONE,
             res: sensorList
         }
     }
@@ -50,7 +51,7 @@ export default class Sensors {
         const sensorList = await this.sensorProvider.getAvailableSensorsLite();
         return {
             type: Sensors.type,
-            state: "done",
+            state: MailboxState.DONE,
             res: sensorList
         }
     }
@@ -77,7 +78,7 @@ export default class Sensors {
 
         const result = {
             type: Sensors.type,
-            state: "stream",
+            state: MailboxState.STREAM,
             samples: samples
         };
 
@@ -93,7 +94,7 @@ export default class Sensors {
     onError(msg, code) {
         return {
             type: Sensors.type,
-            state: "error",
+            state: MailboxState.ERROR,
             msg: msg,
             code: code
         };
@@ -103,7 +104,7 @@ export default class Sensors {
         if (this.subscribed) {
             return {
                 type: Sensors.type,
-                state: "error",
+                state: MailboxState.ERROR,
                 msg: "Already subscribed"
             };
         }
@@ -111,7 +112,7 @@ export default class Sensors {
         if (!sensor || sensor.trim() == "") {
             return {
                 type: Sensors.type,
-                state: "error",
+                state: MailboxState.ERROR,
                 msg: "No sensor specified"
             };
         }
@@ -130,7 +131,7 @@ export default class Sensors {
 
             return {
                 type: Sensors.type,
-                state: "done",
+                state: MailboxState.DONE,
                 msg: "Subscribed"
             };
         } catch (e) {
@@ -138,7 +139,7 @@ export default class Sensors {
             this.subscribed = false;
             return {
                 type: Sensors.type,
-                state: "error",
+                state: MailboxState.ERROR,
                 msg: e.message,
                 stack: e.stack
             };
@@ -159,7 +160,7 @@ export default class Sensors {
         if (!this.subscribed && !this.subscribedSensor) {
             return {
                 type: Sensors.type,
-                state: "error",
+                state: MailboxState.ERROR,
                 msg: "Not subscribed"
             };
         }
@@ -167,7 +168,7 @@ export default class Sensors {
         if (!this.subscribedSensor) {
             return {
                 type: Sensors.type,
-                state: "error",
+                state: MailboxState.ERROR,
                 msg: "Sensor object not found"
             };
         }
@@ -183,13 +184,13 @@ export default class Sensors {
             this.subscribed = false;
             return {
                 type: Sensors.type,
-                state: "done",
+                state: MailboxState.DONE,
                 msg: "Unsubscribed"
             };
         } catch (e) {
             return {
                 type: Sensors.type,
-                state: "error",
+                state: MailboxState.ERROR,
                 msg: e.message,
                 stack: e.stack
             };

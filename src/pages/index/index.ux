@@ -58,8 +58,6 @@
     import InterconnectClient from "../../communication/interconnect";
     import PromiseBrightness from "../../helpers/promiseBrightness"
 
-    import PromiseFile from "../../helpers/promiseFile"
-
     import Mailbox from "../../communication/mailbox"
     import Paths from "../../constants/paths"
 
@@ -95,14 +93,13 @@
 
             client: null,
             brightness: PromiseBrightness,
-            file: PromiseFile,
             base64: base64,
 
             router: new Router(),
             mailbox: new Mailbox(Paths.mailbox, 1000, false),
 
             activityClasses: {
-
+                // this gets populated in setupRouter()
             },
 
             read: ReadRawFile

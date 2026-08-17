@@ -1,3 +1,5 @@
+import MailboxState from "../../constants/mailboxStates";
+
 export default class QJSShell {
     static type = "qjs";
     static needsLua = false;
@@ -139,12 +141,12 @@ export default class QJSShell {
             return {
                 type: QJSShell.type,
                 res: safeResult,
-                state: "done"
+                state: MailboxState.DONE
             }
         } catch (e) {
             return {
                 type: QJSShell.type,
-                state: "error",
+                state: MailboxState.ERROR,
                 msg: e.message,
                 stack: e.stack
             }

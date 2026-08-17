@@ -1,3 +1,4 @@
+import MailboxState from "../../constants/mailboxStates";
 import PromiseFile from "../../helpers/promiseFile"
 
 export default class Terminal {
@@ -22,7 +23,7 @@ export default class Terminal {
 
         return {
             type: Terminal.type,
-            state: "error",
+            state: MailboxState.ERROR,
             msg: errMsg,
             stack: stack
         }
@@ -51,7 +52,7 @@ export default class Terminal {
 
             return {
                 type: Terminal.type,
-                state: "done",
+                state: MailboxState.DONE,
                 res: cmdOut,
                 code: exitCode
             }
