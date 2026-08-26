@@ -64,7 +64,14 @@ class PromiseFile {
                 position: position,
                 length: length,
 
-                success: ({ buffer }) => resolve(buffer),
+                success: function(data) {
+                    const buffer = data.buffer;
+                    // The emulator returns Int8Array and values overflow
+                    // Here it get's converted to the proper type (if wrong)
+                    const safeBuffer =
+                        (buffer instanceof Uint8Array) ? buffer : new Uint8Array(buffer);
+                    resolve(safeBuffer);
+                },
                 fail: (_, code) => reject(new Error(code))
             });
         });

@@ -2,8 +2,10 @@ import base64 from "../libs/base64.min.js";
 import crypto from "@system.crypto"
 import promiseFile from "./promiseFile.js";
 
+import Base64 from "./base64Byte.js";
+
 export default class ReadFileRaw {
-    constructor(uri, chunkSize = 9984) {
+    constructor(uri, chunkSize = 25600) {
         this.uri = uri;
 
         this.size = -1;
@@ -27,29 +29,29 @@ export default class ReadFileRaw {
     async getChunk(start, length) {
         const chunk = await promiseFile.readBuffer(this.uri, start, length);
         console.log("file read");
-        const byteStr = this.uint8ToByteString(chunk);
-        console.log("in byteStr");
+        // const byteStr = this.uint8ToByteString(chunk);
+        // console.log("in byteStr");
         // return base64.encode(byteStr);
         // return crypto.btoa(byteStr);
-        return byteStr
+        // return byteStr
+        // return "fu";
+        return Base64.encode(chunk);
     }
 
     async init() {
         if (this.size === -1) {
             const info = await promiseFile.getInfo(this.uri);
             this.size = info.length;
-            // this.totalChunks = Math.ceil(this.size / this.chunkSize) || 1;
-            this.totalChunks = 20;
+            this.totalChunks = Math.ceil(this.size / this.chunkSize) || 1;
+            // this.totalChunks = 20;
         }
     }
 
     async next() {
         console.log("next");
-        // if (this.size === -1) {
-        //     await this.init();
-        // }
-        this.size = 90000;
-        this.totalChunks = 25;
+        if (this.size === -1) {
+            await this.init();
+        }
         console.log("init end");
 
         if (this.size === 0) {

@@ -59,6 +59,7 @@
     import PromiseBrightness from "../../helpers/promiseBrightness"
 
     import Mailbox from "../../communication/mailbox"
+    import MailboxState from "../../constants/mailboxStates";
     import Paths from "../../constants/paths"
 
     import Router from "../../router/router";
@@ -75,6 +76,7 @@
     import SystemInfo from "../../router/activities/systemInfo"
 
     import base64 from "../../libs/base64.min.js"
+    import bb64 from "../../helpers/base64Byte"
     import ReadRawFile from "../../helpers/readRawFile"
 
     export default {
@@ -94,6 +96,7 @@
             client: null,
             brightness: PromiseBrightness,
             base64: base64,
+            bb64: bb64,
 
             router: new Router(),
             mailbox: new Mailbox(Paths.mailbox, 1000, false),
@@ -340,7 +343,7 @@
                 // last resort
                 await this.client.send({
                     type: "interconnect",
-                    state: "error",
+                    state: MailboxState.ERROR,
                     message: e.message,
                     stack: e.stack
                 });
