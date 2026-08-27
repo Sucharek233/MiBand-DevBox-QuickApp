@@ -125,32 +125,50 @@ export default class QJSShell {
     }
 
     async execute(code) {
+        if (!code) {
+            return {
+                type: QJSShell.type,
+                state: MailboxState.ERROR,
+                msg: "Empty code",
+            }
+        }
+
         try {
+            const logs = [];
             const fn = new Function(
                 "shell",
+                "customConsole",
                 `
                 return (async () => {
+                    const console = customConsole;
                     ${code}
                 })();
                 `
             );
     
-            const result = await fn(this.exposedFunctions);
+            const customConsole = {
+                ...console,
+                log: (...args) => {
+                    logs.push(args.map(a => this.safeStringify(a)).join(" "));
+                }
+            };
+    
+            const result = await fn(this.exposedFunctions, customConsole);
             const safeResult = this.safeStringify(result);
     
             return {
                 type: QJSShell.type,
                 res: safeResult,
+                logs: logs,
                 state: MailboxState.DONE
-            }
+            };
         } catch (e) {
             return {
                 type: QJSShell.type,
                 state: MailboxState.ERROR,
                 msg: e.message,
                 stack: e.stack
-            }
+            };
         }
-        
     }
 }

@@ -55,6 +55,20 @@ aiot.appCtx.messageReceived(
     )
 )
 
+aiot.appCtx.messageReceived(
+    JSON.stringify(
+        {
+            type: "sensorsLua",
+            args: {
+                type: "sub",
+                sensor: "sensor_accel0",
+                provider: "file",
+                useKnown: true
+            }
+        }
+    )
+)
+
 // sum cool stuff
 const sensor = this.$app_require$("@app-module/system.sensor");
 let unsubNum = sensor.subscribe({ type: 2, callback: (res) => console.log(res) });

@@ -27,6 +27,21 @@ export default class Sensors {
         const sensor = args.sensor;
         const request = args.req;
 
+        if (!request) {
+            return {
+                type: Sensors.type,
+                state: MailboxState.ERROR,
+                msg: "No request"
+            }
+        }
+        if (!sensor) {
+            return {
+                type: Sensors.type,
+                state: MailboxState.ERROR,
+                msg: "No sensor"
+            }
+        }
+
         if (request == "list") {
             return await this.returnList();
         } else if (request == "listLite") {
