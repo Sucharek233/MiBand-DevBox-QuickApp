@@ -83,7 +83,8 @@
             "features":[
                 "system.audio",
                 "system.request",
-                "system.geolocation"
+                "system.geolocation",
+                "system.sensor"
             ]
         }
     },
