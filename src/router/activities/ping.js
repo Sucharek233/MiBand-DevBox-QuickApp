@@ -6,42 +6,63 @@ export default class Ping {
 
     constructor(mailbox) {
         this.mailbox = mailbox;
-        this.pinging = false;
+
+        // qjs doesn't need a pinging state
+        this.pingingLua = false;
     }
     
-    async handle(_) {
-        return await this.ping();
+    async handle(message) {
+        return await this.ping(message.args);
     }
 
-    async ping() {
-        if (this.pinging) return;
+    async ping(args) {
+        if (this.pingingLua) return {
+            type: Ping.type,
+            state: MailboxState.ERROR,
+            msg: "Already pinging",
+        };
 
-        this.pinging = true;
         try {
+            const type = args.type;
             const startTime = Date.now();
-            const result = await this.mailbox.request(
-                Ping.type,
-                {},
-                2500 // 2.5 second timeout
-            );
-            this.pinging = false;
 
-            const endTime = Date.now();
+            if (type == "lua") {
+                this.pingingLua = true;
 
-            const luaAckTime = result.time;
+                await this.mailbox.request(
+                    Ping.type,
+                    {},
+                    2500
+                );
+                this.pingingLua = false;
 
-            const ackTime = endTime - luaAckTime;
-            const totalTime = endTime - startTime;
+                const endTime = Date.now();
 
-            return {
-                type: Ping.type,
-                state: MailboxState.DONE,
-                startTime: startTime,
-                ackTime: ackTime,
-                totalTime: totalTime
-            };
+                // only send timestamps
+                return {
+                    type: Ping.type,
+                    state: MailboxState.DONE,
+                    startTime: startTime,
+                    endTime: endTime,
+                };
+
+            } else if (type == "qjs") {
+                // just return start time
+                return {
+                    type: Ping.type,
+                    state: MailboxState.DONE,
+                    ackTime: startTime,
+                };
+
+            } else {
+                return {
+                    type: Ping.type,
+                    state: MailboxState.ERROR,
+                    msg: "Unknown type",
+                };
+            }
         } catch (e) {
-            this.pinging = false;
+            this.pingingLua = false;
             if (e.message == "Mailbox timeout") {
                 return {
                     type: Ping.type,

@@ -9,8 +9,8 @@ export default class ModuleCompatibility {
         this.qjsShell = qjsShell;
     }
 
-    async handle(msgObj) {
-        return this.check(msgObj.args);
+    async handle(message) {
+        return this.check(message.args);
     }
 
     check(args) {

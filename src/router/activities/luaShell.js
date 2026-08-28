@@ -8,8 +8,8 @@ export default class LuaShell {
         this.mailbox = mailbox;
     }
     
-    async handle(msgObj) {
-        return await this.execute(msgObj.args);
+    async handle(message) {
+        return await this.execute(message.args);
     }
 
     async execute(args) {

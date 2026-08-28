@@ -80,8 +80,6 @@
     import bb64 from "../../helpers/base64Byte"
     import ReadRawFile from "../../helpers/readRawFile"
 
-    import promiseDevice from "../../helpers/promiseDevice.js";
-
     export default {
         private: {
             // for UI
@@ -91,6 +89,7 @@
 
                 luaText: "Ping Lua",
                 luaClass: "status-idle",
+                pingingLua: false,
 
                 logText: "",
                 logTextMax: 8000
@@ -98,6 +97,7 @@
 
             client: null,
             brightness: PromiseBrightness,
+
             base64: base64,
             bb64: bb64,
 
@@ -108,8 +108,7 @@
                 // this gets populated in setupRouter()
             },
 
-            read: ReadRawFile,
-            dev: promiseDevice
+            read: ReadRawFile
         },
 
         // UI stuff
@@ -186,18 +185,27 @@
             this.$app.exit();
         },
         async pingLua() {
+            if (this.uiData.pingingLua) return;
+            this.uiData.pingingLua = true;
+            
             this.setLuaState("pinging");
-            const result = await this.activityClasses.ping.ping();
+            const result = await this.activityClasses.ping.ping({type: "lua"});
             if (result.state == "done") {
-                this.setLuaState("online", result.totalTime);
-                this.appendLog(`Lua service responded in ${result.totalTime}ms (ack: ${result.ackTime}ms)`);
+                const totalTime = result.endTime - result.startTime;
+                
+                this.setLuaState("online", totalTime);
+                this.appendLog(`Lua service responded in ${totalTime}ms`);
+                
             } else if (result.state == "timeout") {
                 this.setLuaState("error");
-                this.appendLog(`Lua service ping timeout`)
+                this.appendLog(`Lua service ping timeout`);
+
             } else if (result.state == "error") {
                 this.setLuaState("error");
                 this.appendLog(`Lua service ping failed: ${result.msg}`)
             }
+
+            this.uiData.pingingLua = false;
         },
 
         async onInit() {
@@ -345,12 +353,12 @@
                 const result = await targetRoute.handler(msgObj);
                 if (needsLua) await this.brightness.setKeepScreenOn(false);
 
-                // console.log("Res", JSON.parse(JSON.stringify(result)));
+                console.log("Res", JSON.parse(JSON.stringify(result)));
                 this.appendLog(`${type} finished, sending...`);
                 await this.client.send(result);
             } catch (e) {
                 if (needsLua) await this.brightness.setKeepScreenOn(false);
-                // console.log(e.message, e.stack);
+                console.log(e.message, e.stack);
                 this.appendLog(`${type} failed: ${e.message}`);
 
                 // last resort

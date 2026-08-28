@@ -20,8 +20,8 @@ export default class SensorsLua {
         this.lastReadingRaw = null;
     }
     
-    async handle(msgObj) {
-        return await this.run(msgObj.args);
+    async handle(message) {
+        return await this.run(message.args);
     }
 
     async run(args) {

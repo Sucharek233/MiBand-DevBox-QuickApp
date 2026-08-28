@@ -9,8 +9,8 @@ export default class Terminal {
         this.mailbox = mailbox;
     }
     
-    async handle(msgObj) {
-        return await this.run(msgObj.args);
+    async handle(message) {
+        return await this.run(message.args);
     }
 
     handleCmdFail(err) {
