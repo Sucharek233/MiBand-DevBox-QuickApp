@@ -330,7 +330,7 @@
         },
 
         async messageReceived(msg) {
-            const msgObj = JSON.parse(msg);
+            const msgObj = JSON.parse(msg) ?? {};
             const type = msgObj?.type;
             this.appendLog(`Received request for ${type}`);
             // console.log(msgObj);
@@ -338,36 +338,40 @@
             if (!type) {
                 this.appendLog(`No type specified!`);
                 return;
-            } else if (
-                !Object.keys(this.router.routes).includes(type)
-            ) {
-                this.appendLog(`Unknown type: ${type}`);
-                return;
             }
 
             const targetRoute = this.router.routes[type];
+            if (!targetRoute) {
+                this.appendLog(`Unknown type: ${type}`); return;
+            }
+
             const needsLua = targetRoute.needsLua ?? false;
             if (needsLua) await this.brightness.setKeepScreenOn(true);
 
             try {
-                const result = await targetRoute.handler(msgObj);
-                if (needsLua) await this.brightness.setKeepScreenOn(false);
+                if (needsLua) await this.brightness.setKeepScreenOn(true);
 
-                console.log("Res", JSON.parse(JSON.stringify(result)));
+                const result = await targetRoute.handler(msgObj);
+
+                console.log("Res", result);
                 this.appendLog(`${type} finished, sending...`);
+
                 await this.client.send(result);
             } catch (e) {
-                if (needsLua) await this.brightness.setKeepScreenOn(false);
-                console.log(e.message, e.stack);
-                this.appendLog(`${type} failed: ${e.message}`);
+                console.error(e?.message, e?.stack);
+                this.appendLog(`${type} failed: ${e?.message ?? e}`);
 
                 // last resort
-                await this.client.send({
-                    type: "interconnect",
-                    state: MailboxState.ERROR,
-                    message: e.message,
-                    stack: e.stack
-                });
+                try {
+                    await this.client.send({
+                        type: "interconnect",
+                        state: MailboxState.ERROR,
+                        message: e?.message ?? String(e),
+                        stack: e?.stack
+                    });
+                } catch (_) {} // :)
+            } finally {
+                if (needsLua) await this.brightness.setKeepScreenOn(false);
             }
         }
     }
