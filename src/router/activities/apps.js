@@ -1,4 +1,5 @@
 import MailboxState from "../../constants/mailboxStates";
+import router from '@system.router' 
 
 export default class Apps {
     static type = "apps";
@@ -14,16 +15,42 @@ export default class Apps {
 
     async run(args) {
         try {
-            const result = await this.mailbox.request(
-                Apps.type,
-                args
-            );
+            const type = args.type;
+            if (type == "run") {
+                const pkg = args.pkg;
+                if (!pkg) {
+                    return {
+                        type: Apps.type,
+                        state: MailboxState.ERROR,
+                        msg: "No app specified"
+                    }
+                }
 
-            const appState = result.appState;
-            return {
-                type: Apps.type,
-                res: result.res,
-                state: appState
+                const path = args.path
+                const params = args.params ?? {};
+
+                let uri = `hap://app/${pkg}`;
+                if (path) {
+                    uri += `/${path}`;
+                }
+
+                router.push({
+                    uri: uri,
+                    params: params
+                });
+                
+            } else {
+                const result = await this.mailbox.request(
+                    Apps.type,
+                    args
+                );
+    
+                const appState = result.appState;
+                return {
+                    type: Apps.type,
+                    res: result.res,
+                    state: appState
+                }
             }
         } catch (e) {
             return {

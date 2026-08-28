@@ -1,3 +1,4 @@
+import PromiseBrightness from "../../../helpers/promiseBrightness"
 import SensorProvider from "./providers/system.sensor";
 import MailboxState from "../../../constants/mailboxStates";
 
@@ -8,6 +9,7 @@ export default class Sensors {
     constructor(interconnect) {
         this.interconnect = interconnect;
         this.sensorProvider = new SensorProvider();
+        this.brightness = PromiseBrightness;
 
         this.subscribed = false;
         this.subscribedSensor = undefined;
@@ -53,6 +55,7 @@ export default class Sensors {
             return await this.subscribe(sensor);
             
         } else if (request == "unsub") {
+            await this.brightness.setKeepScreenOn(false);
             return await this.unsubscribe();
         }
     }
@@ -76,6 +79,7 @@ export default class Sensors {
     }
 
     async sendData() {
+        await this.brightness.setKeepScreenOn(true);
         if (this.data.length === 0) {
             return;
         }
