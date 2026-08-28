@@ -3,10 +3,10 @@ export default class Router {
         this.routes = {};
     }
 
-    register(type, needsLua, handler) {
+    register(type, needsScreenOn, handler) {
         this.routes[type] = {
             handler: handler,
-            needsLua: needsLua
+            needsScreenOn: needsScreenOn
         };
     }
 

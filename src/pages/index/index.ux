@@ -241,7 +241,7 @@
             const terminal = new Terminal(this.mailbox);
             this.router.register(
                 Terminal.type,
-                Terminal.needsLua,
+                Terminal.needsScreenOn,
                 terminal.handle.bind(terminal)
             );
             this.activityClasses.terminal = terminal;
@@ -249,7 +249,7 @@
             const qjs = new QJSShell(this, global);
             this.router.register(
                 QJSShell.type,
-                QJSShell.needsLua,
+                QJSShell.needsScreenOn,
                 qjs.handle.bind(qjs)
             );
             this.activityClasses.qjs = qjs;
@@ -257,7 +257,7 @@
             const io = new FileManager(this.mailbox);
             this.router.register(
                 FileManager.type,
-                FileManager.needsLua,
+                FileManager.needsScreenOn,
                 io.handle.bind(io)
             );
             this.activityClasses.io = io;
@@ -265,7 +265,7 @@
             const sensors = new Sensors(this.client);
             this.router.register(
                 Sensors.type,
-                Sensors.needsLua,
+                Sensors.needsScreenOn,
                 sensors.handle.bind(sensors)
             );
             this.activityClasses.sensors = sensors;
@@ -273,7 +273,7 @@
             const sensorsLua = new SensorsLua(this.mailbox, this.client);
             this.router.register(
                 SensorsLua.type,
-                SensorsLua.needsLua,
+                SensorsLua.needsScreenOn,
                 sensorsLua.handle.bind(sensorsLua)
             );
             this.activityClasses.sensorsLua = sensorsLua;
@@ -281,7 +281,7 @@
             const modules = new ModuleCompatibility(qjs);
             this.router.register(
                 ModuleCompatibility.type,
-                ModuleCompatibility.needsLua,
+                ModuleCompatibility.needsScreenOn,
                 modules.handle.bind(modules)
             );
             this.activityClasses.modules = modules;
@@ -289,7 +289,7 @@
             const ping = new Ping(this.mailbox);
             this.router.register(
                 Ping.type,
-                Ping.needsLua,
+                Ping.needsScreenOn,
                 ping.handle.bind(ping)
             );
             this.activityClasses.ping = ping;
@@ -297,7 +297,7 @@
             const luaShell = new LuaShell(this.mailbox);
             this.router.register(
                 LuaShell.type,
-                LuaShell.needsLua,
+                LuaShell.needsScreenOn,
                 luaShell.handle.bind(luaShell)
             );
             this.activityClasses.luaShell = luaShell;
@@ -305,7 +305,7 @@
             const sysInfo = new SystemInfo();
             this.router.register(
                 SystemInfo.type,
-                SystemInfo.needsLua,
+                SystemInfo.needsScreenOn,
                 sysInfo.handle.bind(sysInfo)
             );
             this.activityClasses.sysInfo = sysInfo;
@@ -313,7 +313,7 @@
             const apps = new Apps(this.mailbox);
             this.router.register(
                 Apps.type,
-                Apps.needsLua,
+                Apps.needsScreenOn,
                 apps.handle.bind(apps)
             );
             this.activityClasses.apps = apps;
@@ -345,11 +345,11 @@
                 this.appendLog(`Unknown type: ${type}`); return;
             }
 
-            const needsLua = targetRoute.needsLua ?? false;
-            if (needsLua) await this.brightness.setKeepScreenOn(true);
+            const needsScreenOn = targetRoute.needsScreenOn ?? false;
+            if (needsScreenOn) await this.brightness.setKeepScreenOn(true);
 
             try {
-                if (needsLua) await this.brightness.setKeepScreenOn(true);
+                if (needsScreenOn) await this.brightness.setKeepScreenOn(true);
 
                 const result = await targetRoute.handler(msgObj);
 
@@ -371,7 +371,7 @@
                     });
                 } catch (_) {} // :)
             } finally {
-                if (needsLua) await this.brightness.setKeepScreenOn(false);
+                if (needsScreenOn) await this.brightness.setKeepScreenOn(false);
             }
         }
     }

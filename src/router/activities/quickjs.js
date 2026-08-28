@@ -2,7 +2,7 @@ import MailboxState from "../../constants/mailboxStates";
 
 export default class QJSShell {
     static type = "qjs";
-    static needsLua = false;
+    static needsScreenOn = false;
 
     constructor(appCtx, global) {
         this.context = appCtx;

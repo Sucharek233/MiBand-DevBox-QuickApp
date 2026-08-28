@@ -3,7 +3,7 @@ import PromiseDevice from "../../helpers/promiseDevice.js";
 
 export default class SystemInfo {
     static type = "sysinfo";
-    static needsLua = false;
+    static needsScreenOn = false;
 
     async handle(_) {
         return await this.get();

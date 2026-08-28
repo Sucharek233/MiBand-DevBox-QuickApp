@@ -2,7 +2,7 @@ import MailboxState from "../../constants/mailboxStates";
 
 export default class LuaShell {
     static type = "luashell";
-    static needsLua = true;
+    static needsScreenOn = true;
 
     constructor(mailbox) {
         this.mailbox = mailbox;

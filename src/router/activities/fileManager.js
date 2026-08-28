@@ -2,7 +2,7 @@ import MailboxState from "../../constants/mailboxStates";
 
 export default class FileManager {
     static type = "io";
-    static needsLua = true;
+    static needsScreenOn = true;
 
     constructor(mailbox) {
         this.mailbox = mailbox;

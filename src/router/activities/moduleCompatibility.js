@@ -3,7 +3,7 @@ import MailboxState from "../../constants/mailboxStates";
 
 export default class ModuleCompatibility {
     static type = "modules";
-    static needsLua = false;
+    static needsScreenOn = false;
 
     constructor(qjsShell) {
         this.qjsShell = qjsShell;

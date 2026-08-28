@@ -3,7 +3,7 @@ import MailboxState from "../../../constants/mailboxStates";
 
 export default class Sensors {
     static type = "sensors";
-    static needsLua = false;
+    static needsScreenOn = true;
 
     constructor(interconnect) {
         this.interconnect = interconnect;

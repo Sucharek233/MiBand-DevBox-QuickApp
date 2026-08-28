@@ -3,7 +3,7 @@ import PromiseFile from "../../helpers/promiseFile"
 
 export default class Terminal {
     static type = "cmd";
-    static needsLua = true;
+    static needsScreenOn = true;
 
     constructor(mailbox) {
         this.mailbox = mailbox;
