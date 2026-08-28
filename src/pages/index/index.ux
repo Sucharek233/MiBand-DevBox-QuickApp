@@ -74,6 +74,7 @@
     import Ping from "../../router/activities/ping"
     import LuaShell from "../../router/activities/luaShell"
     import SystemInfo from "../../router/activities/systemInfo"
+    import SystemInfoLua from "../../router/activities/systemInfoLua"
     import Apps from "../../router/activities/apps"
 
     import base64 from "../../libs/base64.min.js"
@@ -309,6 +310,14 @@
                 sysInfo.handle.bind(sysInfo)
             );
             this.activityClasses.sysInfo = sysInfo;
+
+            const sysInfoLua = new SystemInfoLua(this.mailbox);
+            this.router.register(
+                SystemInfoLua.type,
+                SystemInfoLua.needsScreenOn,
+                sysInfoLua.handle.bind(sysInfoLua)
+            );
+            this.activityClasses.sysInfoLua = sysInfoLua;
 
             const apps = new Apps(this.mailbox);
             this.router.register(

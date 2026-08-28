@@ -38,7 +38,12 @@ export default class Apps {
                     uri: uri,
                     params: params
                 });
-                
+
+                // hmm
+                return {
+                    type: Apps.type,
+                    state: MailboxState.DONE
+                }
             } else {
                 const result = await this.mailbox.request(
                     Apps.type,

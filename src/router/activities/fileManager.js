@@ -12,19 +12,6 @@ export default class FileManager {
         return await this.run(message.args);
     }
 
-    handleFail(err) {
-        let errMsg = err;
-        if (typeof(err) == "object") {
-            errMsg = `${err.message}\n${err.stack}`;
-        }
-
-        return {
-            type: FileManager.type,
-            state: MailboxState.ERROR,
-            msg: errMsg
-        }
-    }
-
     async run(args) {
         try {
             const result = await this.mailbox.request(
@@ -38,7 +25,12 @@ export default class FileManager {
                 state: MailboxState.DONE
             }
         } catch (e) {
-            return this.handleFail(e);
+            return {
+                type: FileManager.type,
+                state: MailboxState.ERROR,
+                msg: e.msg,
+                stack: e.stack
+            }
         }
     }
 }
