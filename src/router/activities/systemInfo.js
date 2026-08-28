@@ -1,5 +1,5 @@
 import MailboxState from "../../constants/mailboxStates";
-import promiseDevice from "../../helpers/prosimeDevice";
+import PromiseDevice from "../../helpers/promiseDevice.js";
 
 export default class SystemInfo {
     static type = "sysinfo";
@@ -10,20 +10,16 @@ export default class SystemInfo {
     }
 
     async get() {
-        const main = await promiseDevice.getInfo();
-        const storage =  await promiseDevice.getStorageOverview();
-        const serial = await promiseDevice.getSerial() ?? "NA";
+        const main = await PromiseDevice.getInfo();
+        const storage =  await PromiseDevice.getStorageOverview();
+        const serial = await PromiseDevice.getSerial() ?? "-";
 
         let deviceId = "";
         // there are 2 functions
         // might as well use them :)
-        try {
-            deviceId = await promiseDevice.getDeviceId();
-        } catch (_) {
-            deviceId = await promiseDevice.getId();
-        } finally {
-            deviceId = "-";
-        }
+        deviceId = await PromiseDevice.getDeviceId()
+            .catch(() => PromiseDevice.getId())
+            .catch(() => "-");
 
         return {
             type: SystemInfo.type,

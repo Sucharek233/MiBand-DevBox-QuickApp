@@ -58,9 +58,9 @@ export default class InterconnectClient {
 
         this.installHandlers();
 
-        await this.waitForConnection();
+        this.waitForConnection();
 
-        this.connecting = false;
+        // this.connecting = false;
     }
 
     installHandlers() {
@@ -93,42 +93,23 @@ export default class InterconnectClient {
     }
 
     waitForConnection() {
-        return new Promise((resolve, reject) => {
-            this.conn.getReadyState({
-                success: ({ status }) => {
-                    switch (status) {
-                        case 0:
-                            this.log("Connecting...");
-                            break;
-
-                        case 1:
-                            this.log("Ready.");
-                            resolve();
-                            break;
-
-                        case 2:
-                            reject(new Error("Connection failed."));
-                            this.connecting = false;
-                            break;
-
-                        default:
-                            this.connecting = false;
-                            reject(
-                                new Error(
-                                    `Unknown state ${status}`
-                                )
-                            );
-                    }
-                },
-                fail: (_, code) => {
-                    this.connecting = false;
-                    reject(
-                        new Error(
-                            `getReadyState failed (${code})`
-                        )
-                    );
+        this.conn.getReadyState({
+            success: ({ status }) => {
+                this.connecting = false;
+                if (status == 1) {
+                    this.connected = true;
+                    this.openHandler();
+                } else if (status == 2) {
+                    this.closeHandler();
                 }
-            });
+            },
+            fail: ({ code }) => {
+                this.connecting = false;
+                if (code == 1006) {
+                    this.connected = false;
+                    this.closeHandler();
+                }
+            }
         });
     }
 

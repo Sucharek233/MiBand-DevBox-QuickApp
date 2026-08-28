@@ -1,4 +1,5 @@
 import PromiseFile from "../../helpers/promiseFile"
+import PromiseBrightness from "../../helpers/promiseBrightness"
 import MailboxState from "../../constants/mailboxStates";
 
 export default class SensorsLua {
@@ -9,6 +10,7 @@ export default class SensorsLua {
         this.mailbox = mailbox;
         this.interconnect = interconnect;
 
+        this.brightness = PromiseBrightness
         this.file = PromiseFile;
         this.outputFile = undefined;
 
@@ -119,14 +121,15 @@ export default class SensorsLua {
     }
 
     startPolling() {
-        if (this.isPolling) return; 
-            
-            this.isPolling = true;
-            this.poll();
-        }
+        if (this.isPolling) return;
+        
+        this.isPolling = true;
+        this.poll();
+    }
     
     async poll() {
         if (!this.isPolling || !this.outputFile) return;
+        this.brightness.setKeepScreenOn(true);
 
         try {
             const rawContent = await this.file.readText(this.outputFile);

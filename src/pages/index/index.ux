@@ -80,6 +80,8 @@
     import bb64 from "../../helpers/base64Byte"
     import ReadRawFile from "../../helpers/readRawFile"
 
+    import promiseDevice from "../../helpers/promiseDevice.js";
+
     export default {
         private: {
             // for UI
@@ -106,7 +108,8 @@
                 // this gets populated in setupRouter()
             },
 
-            read: ReadRawFile
+            read: ReadRawFile,
+            dev: promiseDevice
         },
 
         // UI stuff
@@ -162,7 +165,7 @@
             }
         },
         appendLog(message) {
-            console.log(message); // for now :)
+            // console.log(message); // for now :)
 
             // const line =
             //     `[${new Date().toLocaleTimeString()}] ${message}\n`;
@@ -222,6 +225,7 @@
             });
 
             await this.mailbox.init();
+            await this.connect();
             this.setupRouter();
         },
 
@@ -309,11 +313,11 @@
 
         async connect() {
             try {
-                await this.client.connect();
                 this.setConnectionState("connecting");
+                await this.client.connect();
             } catch (e) {
-                this.appendLog(e.message);
                 this.setConnectionState("error");
+                this.appendLog(e.message);
             }
         },
 
@@ -341,7 +345,7 @@
                 const result = await targetRoute.handler(msgObj);
                 if (needsLua) await this.brightness.setKeepScreenOn(false);
 
-                console.log("Res", JSON.parse(JSON.stringify(result)));
+                // console.log("Res", JSON.parse(JSON.stringify(result)));
                 this.appendLog(`${type} finished, sending...`);
                 await this.client.send(result);
             } catch (e) {

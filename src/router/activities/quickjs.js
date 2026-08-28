@@ -141,6 +141,7 @@ export default class QJSShell {
                 `
                 return (async () => {
                     const console = customConsole;
+                    const getModule = shell.getModule;
                     ${code}
                 })();
                 `

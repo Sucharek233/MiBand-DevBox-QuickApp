@@ -34,20 +34,24 @@ export default class Sensors {
                 msg: "No request"
             }
         }
-        if (!sensor) {
-            return {
-                type: Sensors.type,
-                state: MailboxState.ERROR,
-                msg: "No sensor"
-            }
-        }
 
         if (request == "list") {
             return await this.returnList();
+
         } else if (request == "listLite") {
             return await this.returnListLite();
+
         } else if (request == "sub") {
+            if (!sensor) {
+                return {
+                    type: Sensors.type,
+                    state: MailboxState.ERROR,
+                    msg: "No sensor"
+                }
+            }
+            
             return await this.subscribe(sensor);
+            
         } else if (request == "unsub") {
             return await this.unsubscribe();
         }
