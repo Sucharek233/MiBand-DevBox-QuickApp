@@ -21,5 +21,8 @@
   },
   "browserslist": [
     "chrome 65"
-  ]
+  ],
+  "dependencies": {
+    "@aiot-toolkit/jsc": "^1.0.9"
+  }
 }
