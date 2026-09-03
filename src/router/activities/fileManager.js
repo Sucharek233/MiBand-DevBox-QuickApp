@@ -122,7 +122,6 @@ export default class FileManager {
                 };
             }
 
-            // 1. Initial request to prepare Lua streamer
             const result = await this.mailbox.request(
                 FileManager.type,
                 args,
@@ -159,8 +158,31 @@ export default class FileManager {
             };
 
         } else if (type === "chunk") {
-            // Handled internally by nextChunk() to control reading vs. requesting
             return await this.nextChunk();
+
+        } else if (type === "stop") {
+            const result = await this.mailbox.request(
+                FileManager.type,
+                args,
+                10000
+            );
+
+            this.streaming = false;
+            this.fileSize = -1;
+            this.chunkSize = -1;
+            this.chunkPosition = 0;
+
+            const res = {
+                type: FileManager.type,
+                state: result.appState,
+            };
+            if (result.appState == MailboxState.DONE) {
+                res.res = result.res; // cursed lmao
+            } else {
+                res.msg = result.res;
+            }
+            
+            return res;
         }
     }
 

@@ -98,12 +98,12 @@ export default class Mailbox {
 
             const id = ++this.currentId;
             await this.write({
-                version: 1,
+                // version: 1,
                 id,
                 state: MailboxState.PENDING,
                 type,
                 args,
-                timestamp: Date.now()
+                // timestamp: Date.now()
             });
 
             this.log("Request submitted:", id);

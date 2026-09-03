@@ -76,6 +76,7 @@
     import SystemInfo from "../../router/activities/systemInfo"
     import SystemInfoLua from "../../router/activities/systemInfoLua"
     import Apps from "../../router/activities/apps"
+    import Misc from "../../router/activities/misc"
 
     export default {
         private: {
@@ -319,6 +320,14 @@
                 apps.handle.bind(apps)
             );
             this.activityClasses.apps = apps;
+
+            const misc = new Misc();
+            this.router.register(
+                Misc.type,
+                Misc.needsScreenOn,
+                misc.handle.bind(misc)
+            );
+            this.activityClasses.misc = misc;
         },
 
         async connect() {
