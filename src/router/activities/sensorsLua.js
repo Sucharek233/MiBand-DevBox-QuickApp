@@ -115,7 +115,6 @@ export default class SensorsLua {
             state: MailboxState.STREAM,
             samples: rawReading
         };
-        console.log(result);
 
         await this.interconnect.send(result);
     }

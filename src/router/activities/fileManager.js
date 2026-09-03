@@ -5,13 +5,17 @@ export default class FileManager {
     static type = "io";
     static needsScreenOn = true;
 
+    // 32 KiB
+    // Might be too much?
+    static maxJChunkSize = 32768;
+
     constructor(mailbox) {
         this.mailbox = mailbox;
 
         this.streaming = false;
         this.fileSize = -1;
         this.chunkPath = "";
-        this.chunkLimit = 30 * 1024; // 30 KiB MTU limit for JS messages
+        this.chunkLimit = 30720; // 30 KiB default limit
         this.chunkPosition = 0;
         this.chunkSize = -1;
 
@@ -52,7 +56,7 @@ export default class FileManager {
             state: MailboxState.STREAM,
             res: data,
         };
-        
+
         if (!this.chunkMetaSent) {
             result.meta = this.chunkMeta;
             this.chunkMetaSent = true;
@@ -133,9 +137,17 @@ export default class FileManager {
                 };
             }
 
+            let jSize;
+            if (res.jSize > FileManager.maxJChunkSize) {
+                jSize = FileManager.maxJChunkSize;
+            } else {
+                jSize = res.jSize ?? 30 * 1024;
+            }
+
             const res = result.res;
             this.fileSize = res.fileSize;
             this.chunkPath = res.path;
+            this.chunkSize = jSize;
             this.chunkSize = 0;
             this.chunkPosition = 0;
             this.streaming = true;

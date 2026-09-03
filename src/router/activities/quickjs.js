@@ -12,7 +12,8 @@ export default class QJSShell {
         this.maxString = 1024;
 
         this.exposedFunctions = {
-            getModule: this.getModule
+            getModule: this.getModule,
+            runGC: global.runGC
         };
     }
 
@@ -142,6 +143,7 @@ export default class QJSShell {
                 return (async () => {
                     const console = customConsole;
                     const getModule = shell.getModule;
+                    const runGC = shell.runGC;
                     ${code}
                 })();
                 `
