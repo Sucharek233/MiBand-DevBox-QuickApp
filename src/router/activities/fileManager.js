@@ -137,10 +137,10 @@ export default class FileManager {
             }
 
             let jSize;
-            if (res.jSize > FileManager.maxJChunkSize) {
+            if (result.jSize > FileManager.maxJChunkSize) {
                 jSize = FileManager.maxJChunkSize;
             } else {
-                jSize = res.jSize ?? 30 * 1024;
+                jSize = result.jSize ?? 30 * 1024;
             }
 
             const res = result.res;

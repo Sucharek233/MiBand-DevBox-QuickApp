@@ -31,6 +31,13 @@ export default class Terminal {
 
     async run(args) {
         const command = args.cmd;
+        if (!command) {
+            return {
+                type: Terminal.type,
+                state: MailboxState.ERROR,
+                msg: "No cmd"
+            }
+        }
 
         try {
             const result = await this.mailbox.request(
