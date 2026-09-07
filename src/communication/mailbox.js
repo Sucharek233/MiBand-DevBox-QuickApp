@@ -6,8 +6,10 @@ function sleep(ms) {
 }
 
 export default class Mailbox {
-    constructor(path, pollInterval = 1000, debug = false) {
+    constructor(path, statePath, pollInterval = 1000, debug = false) {
         this.path = path;
+        this.statePath = statePath;
+
         this.pollInterval = pollInterval;
         this.retryPollInterval = 10;
         this.debug = debug;
@@ -55,6 +57,10 @@ export default class Mailbox {
             this.path,
             JSON.stringify(data)
         );
+        await this.file.writeText(
+            this.statePath,
+            `${data.state}`
+        );
     }
 
     async init() {
@@ -65,7 +71,7 @@ export default class Mailbox {
 
             if (mailbox.state === MailboxState.RUNNING) {
                 mailbox.state = MailboxState.ERROR;
-                mailbox.error = "reset_after_restart";
+                mailbox.msg = "reset_after_restart";
 
                 await this.write(mailbox);
             }

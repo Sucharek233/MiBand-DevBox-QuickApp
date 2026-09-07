@@ -97,7 +97,7 @@
             brightness: PromiseBrightness,
 
             router: new Router(),
-            mailbox: new Mailbox(Paths.mailbox, 1000, false),
+            mailbox: new Mailbox(Paths.mailbox, Paths.mailboxState, 1000, false),
 
             runGC: global.runGC,
 
@@ -185,17 +185,17 @@
             
             this.setLuaState("pinging");
             const result = await this.activityClasses.ping.ping({type: "lua"});
-            if (result.state == "done") {
+            if (result.state == MailboxState.DONE) {
                 const totalTime = result.endTime - result.startTime;
                 
                 this.setLuaState("online", totalTime);
                 this.appendLog(`Lua service responded in ${totalTime}ms`);
                 
-            } else if (result.state == "timeout") {
+            } else if (result.state == MailboxState.TIMEOUT) {
                 this.setLuaState("error");
                 this.appendLog(`Lua service ping timeout`);
 
-            } else if (result.state == "error") {
+            } else if (result.state == MailboxState.ERROR) {
                 this.setLuaState("error");
                 this.appendLog(`Lua service ping failed: ${result.msg}`)
             }
