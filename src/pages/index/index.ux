@@ -90,7 +90,7 @@
                 pingingLua: false,
 
                 logText: "",
-                logTextMax: 8000
+                logTextMax: 200
             },
 
             client: null,
