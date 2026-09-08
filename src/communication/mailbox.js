@@ -6,21 +6,16 @@ function sleep(ms) {
 }
 
 export default class Mailbox {
-    constructor(path, statePath, pollInterval = 1000, debug = false) {
+    constructor(path, statePath, pollInterval = 100, debug = false) {
         this.path = path;
         this.statePath = statePath;
-
         this.pollInterval = pollInterval;
         this.retryPollInterval = 10;
         this.debug = debug;
         
         this.file = PromiseFile;
-        
         this.currentId = 0;
         this.busy = false;
-
-        this.retryAtt = 0;
-        this.retryAttMax = 5;
     }
 
     log(...args) {
@@ -29,61 +24,51 @@ export default class Mailbox {
         }
     }
 
-    async read() {
-        const mailboxExists = await this.file.exists(this.path);
-        if (!mailboxExists) {
-            return {};
-        }
-
-        const text = await this.file.readText(this.path);
-        if (!text || text == "") {
-            if (this.retryAtt > this.retryAttMax - 1) {
-                throw new Error("Mailbox empty");
+    // state helpers
+    async readState() {
+        try {
+            const buffer = await this.file.readBuffer(this.statePath, 0, 1);
+            if (!buffer || buffer.length === 0) {
+                return MailboxState.IDLE;
             }
-            this.retryAtt++;
-            
-            await sleep(this.retryPollInterval);
-            const retryRead = await this.read();
-            return retryRead;
+            return buffer[0];
+        } catch {
+            return MailboxState.ERROR;
         }
-
-        const result = JSON.parse(String.raw`${text}`);
-        this.retryAtt = 0;
-        return result;
+    }
+    async writeState(stateByte) {
+        const buffer = new Uint8Array([stateByte]);
+        await this.file.writeBuffer(this.statePath, buffer);
     }
 
-    async write(data) {
+    // payload helpers
+    async readJson() {
+        const exists = await this.file.exists(this.path);
+        if (!exists) return {};
+
+        const text = await this.file.readText(this.path);
+        if (!text) return {};
+
+        return JSON.parse(text);
+    }
+    async writeJson(data) {
         await this.file.writeText(
             this.path,
             JSON.stringify(data)
         );
-        await this.file.writeText(
-            this.statePath,
-            `${data.state}`
-        );
     }
 
     async init() {
-        const mailboxExists = await this.file.exists(this.path);
-        if (mailboxExists) {
-            const mailbox = await this.read();
+        const exists = await this.file.exists(this.path);
+        if (exists) {
+            const mailbox = await this.readJson();
             this.currentId = mailbox.id || 0;
-
-            if (mailbox.state === MailboxState.RUNNING) {
-                mailbox.state = MailboxState.ERROR;
-                mailbox.msg = "reset_after_restart";
-
-                await this.write(mailbox);
-            }
         } else {
-            await this.write({
-                version: 1,
-                id: 0,
-                state: MailboxState.IDLE
-            });
-
             this.currentId = 0;
+            await this.writeJson({ id: 0 });
         }
+
+        await this.writeState(MailboxState.IDLE);
     }
 
     async request(type, args = {}, timeout = 5000) {
@@ -94,62 +79,57 @@ export default class Mailbox {
         this.busy = true;
 
         try {
-            const mailbox = await this.read();
-            if (
-                mailbox.state === MailboxState.RUNNING ||
-                mailbox.state === MailboxState.PENDING
-            ) {
+            const currentState = await this.readState();
+            if (currentState === MailboxState.RUNNING || currentState === MailboxState.PENDING) {
                 throw new Error("Lua is busy");
             }
 
             const id = ++this.currentId;
-            await this.write({
-                // version: 1,
+
+            await this.writeJson({
                 id,
-                state: MailboxState.PENDING,
                 type,
-                args,
-                // timestamp: Date.now()
+                args
             });
+
+            await this.writeState(MailboxState.PENDING);
 
             this.log("Request submitted:", id);
 
-            return await this.wait(id, timeout);
+            return await this.wait(timeout);
         } finally {
             this.busy = false;
         }
     }
 
-    async wait(id, timeout) {
+    async wait(timeout) {
         const start = Date.now();
-        while (true) {
-            const mailbox = await this.read();
-            if (mailbox.id !== id) {
-                await sleep(this.pollInterval);
-                continue;
-            }
 
-            switch (mailbox.state) {
+        while (true) {
+            const state = await this.readState();
+
+            switch (state) {
                 case MailboxState.PENDING:
                 case MailboxState.RUNNING:
                     break;
 
+                // these states need the json file to be read
                 case MailboxState.DONE:
-                    this.log("Completed.");
-                    return mailbox;
+                case MailboxState.STREAM:
+                case MailboxState.ERROR: {
+                    const payload = await this.readJson();
 
-                case MailboxState.ERROR:
-                    throw new Error(
-                        mailbox.error || "Mailbox error"
-                    );
+                    if (state === MailboxState.ERROR) {
+                        throw new Error(payload.error || "Mailbox error");
+                    }
+
+                    this.log("Completed with ID:", payload.id);
+                    return payload;
+                }
             }
 
             if (Date.now() - start > timeout) {
-                await this.write({
-                    version: 1,
-                    id,
-                    state: MailboxState.TIMEOUT
-                });
+                await this.writeState(MailboxState.TIMEOUT);
                 throw new Error("Mailbox timeout");
             }
 

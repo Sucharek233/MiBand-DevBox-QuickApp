@@ -97,7 +97,7 @@
             brightness: PromiseBrightness,
 
             router: new Router(),
-            mailbox: new Mailbox(Paths.mailbox, Paths.mailboxState, 1000, false),
+            mailbox: new Mailbox(Paths.mailbox, Paths.mailboxState, 100, false),
 
             runGC: global.runGC,
 
@@ -364,12 +364,12 @@
 
                 const result = await targetRoute.handler(msgObj);
 
-                console.log("Res", result);
+                // console.log("Res", result);
                 this.appendLog(`${type} finished, sending...`);
 
                 await this.client.send(result);
             } catch (e) {
-                console.error(e?.message, e?.stack);
+                // console.error(e?.message, e?.stack);
                 this.appendLog(`${type} failed: ${e?.message ?? e}`);
 
                 // last resort
