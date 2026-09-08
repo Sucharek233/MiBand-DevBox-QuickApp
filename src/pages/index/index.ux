@@ -1,56 +1,59 @@
 <template>
     <div class="page">
 
-        <!-- Title -->
-        <text class="header">DevBox</text>
+        <div class="mainContent">
+            <!-- Title -->
+            <text class="header">DevBox</text>
 
-        <!-- Status -->
-        <div class="status-group">
+            <!-- Status -->
+            <div class="status-group">
 
-            <input
-                type="button"
-                id="connectBtn"
-                class="status-btn {{uiData.connectionClass}}"
-                value="{{uiData.connectionText}}"
-                @click="connect"
-            />
+                <input
+                    type="button"
+                    id="connectBtn"
+                    class="status-btn {{uiData.connectionClass}}"
+                    value="{{uiData.connectionText}}"
+                    @click="connect"
+                />
 
-            <input
-                type="button"
-                class="status-btn {{uiData.luaClass}}"
-                value="{{uiData.luaText}}"
-                @click="pingLua"
-            />
+                <input
+                    type="button"
+                    class="status-btn {{uiData.luaClass}}"
+                    value="{{uiData.luaText}}"
+                    @click="pingLua"
+                />
 
-        </div>
-
-        <!-- Logs -->
-        <div class="log-panel">
-
-            <div class="log-header">
-                <text class="log-title">Logs</text>
-
-                <text
-                    class="clear-btn"
-                    @click="clearLogs"
-                >
-                    Clear
-                </text>
             </div>
 
-            <text class="log-area">{{uiData.logText}}</text>
-            
+            <!-- Logs -->
+            <div class="log-panel">
 
+                <div class="log-header">
+                    <text class="log-title">Logs</text>
+
+                    <text
+                        class="clear-btn"
+                        @click="clearLogs"
+                    >
+                        Clear
+                    </text>
+                </div>
+
+                <text class="log-area">{{uiData.logText}}</text>
+            </div>
+
+            <!-- Bottom button -->
+            <input
+                type="button"
+                class="exit-btn"
+                value="Exit"
+                @click="exit"
+            />
         </div>
 
-        <!-- Bottom button -->
-        <input
-            type="button"
-            class="exit-btn"
-            value="Exit"
-            @click="exit"
-        />
-
+        <div class="screenSaver {{uiData.scrSaverOpen}}" @click="closeScrSaver">
+            <text class="screenSaverText">{{uiData.scrSaverTxt}}</text>
+        </div>
     </div>
 </template>
 
@@ -90,7 +93,10 @@
                 pingingLua: false,
 
                 logText: "",
-                logTextMax: 200
+                logTextMax: 200,
+
+                scrSaverOpen: "closed",
+                scrSaverTxt: ""
             },
 
             client: null,
@@ -201,6 +207,9 @@
             }
 
             this.uiData.pingingLua = false;
+        },
+        closeScrSaver() {
+            this.uiData.scrSaverOpen = "closed";
         },
 
         async onInit() {
@@ -356,12 +365,14 @@
                 this.appendLog(`Unknown type: ${type}`); return;
             }
 
+            // open screen saver every single time
+            this.uiData.scrSaverOpen = "open";
+            this.uiData.scrSaverTxt = `Processing ${type}...`;
+
             const needsScreenOn = targetRoute.needsScreenOn ?? false;
             if (needsScreenOn) await this.brightness.setKeepScreenOn(true);
 
             try {
-                if (needsScreenOn) await this.brightness.setKeepScreenOn(true);
-
                 const result = await targetRoute.handler(msgObj);
 
                 // console.log("Res", result);
@@ -383,6 +394,8 @@
                 } catch (_) {} // :)
             } finally {
                 if (needsScreenOn) await this.brightness.setKeepScreenOn(false);
+
+                this.uiData.scrSaverTxt = "Tap to close screen saver";
             }
         }
     }
@@ -390,4 +403,5 @@
 
 <style>
     @import './css/style.css';
+    @import './css/screensaver.css';
 </style>

@@ -203,7 +203,7 @@ export default class FileManager {
             return {
                 type: FileManager.type,
                 state: MailboxState.ERROR,
-                msg: e.msg,
+                msg: e.message,
                 stack: e.stack
             };
         }
