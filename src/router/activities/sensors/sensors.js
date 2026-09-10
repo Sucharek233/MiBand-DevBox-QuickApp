@@ -14,9 +14,9 @@ export default class Sensors {
         this.subscribed = false;
         this.subscribedSensor = undefined;
 
-        this.maxEntriesPerSend = 10;
         this.data = [];
 
+        this.maxEntriesPerSend = 10;
         this.sendInterval = 1000
         this.sendTimer = null;
     }
@@ -27,23 +27,23 @@ export default class Sensors {
 
     async prepare(args) {
         const sensor = args.sensor;
-        const request = args.req;
+        const type = args.type;
 
-        if (!request) {
+        if (!type) {
             return {
                 type: Sensors.type,
                 state: MailboxState.ERROR,
-                msg: "No request"
+                msg: "No type"
             }
         }
 
-        if (request == "list") {
+        if (type == "list") {
             return await this.returnList();
 
-        } else if (request == "listLite") {
+        } else if (type == "listLite") {
             return await this.returnListLite();
 
-        } else if (request == "sub") {
+        } else if (type == "sub") {
             if (!sensor) {
                 return {
                     type: Sensors.type,
@@ -52,9 +52,9 @@ export default class Sensors {
                 }
             }
             
-            return await this.subscribe(sensor);
+            return await this.subscribe(args);
             
-        } else if (request == "unsub") {
+        } else if (type == "unsub") {
             await this.brightness.setKeepScreenOn(false);
             return await this.unsubscribe();
         }
@@ -104,6 +104,7 @@ export default class Sensors {
             state: MailboxState.STREAM,
             samples: samples
         };
+        console.log(result);
 
         await this.interconnect.send(result);
 
@@ -123,7 +124,7 @@ export default class Sensors {
         };
     }
 
-    async subscribe(sensor) {
+    async subscribe(args) {
         if (this.subscribed) {
             return {
                 type: Sensors.type,
@@ -132,7 +133,7 @@ export default class Sensors {
             };
         }
 
-        if (!sensor || sensor.trim() == "") {
+        if (!args.sensor || args.sensor.trim() == "") {
             return {
                 type: Sensors.type,
                 state: MailboxState.ERROR,
@@ -141,8 +142,14 @@ export default class Sensors {
         }
 
         try {
+            const entriesPerSend = args.streamEntries ?? 10;
+            const sendInterval = args.sendInterval ?? 1000;
+
+            this.maxEntriesPerSend = entriesPerSend;
+            this.sendInterval = sendInterval;
+
             this.subscribedSensor = this.sensorProvider.getSensor(
-                sensor,
+                args.sensor,
                 this.onData.bind(this),
                 this.onError.bind(this)
             );

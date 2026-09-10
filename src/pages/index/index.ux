@@ -375,12 +375,12 @@
             try {
                 const result = await targetRoute.handler(msgObj);
 
-                // console.log("Res", result);
+                console.log("Res", result);
                 this.appendLog(`${type} finished, sending...`);
 
                 await this.client.send(result);
             } catch (e) {
-                // console.error(e?.message, e?.stack);
+                console.error(e?.message, e?.stack);
                 this.appendLog(`${type} failed: ${e?.message ?? e}`);
 
                 // last resort

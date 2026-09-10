@@ -31,8 +31,8 @@ export default class SensorsLua {
             const sensorList = await this.getSensorList(type);
             return {
                 type: SensorsLua.type,
-                state: MailboxState.DONE,
-                res: sensorList
+                state: sensorList.appState,
+                res: sensorList.res
             }
         } else if (type == "sub") {
             return await this.subscribe(args);
@@ -47,26 +47,15 @@ export default class SensorsLua {
             {type: type}
         );
 
-        return result.res;
+        return result;
     }
 
     async subscribe(args) {
-        const provider = args.provider;
-        const sensorName = args.sensor;
-        const useKnown = args.useKnown;
-        const period = args.period;
-
         const result = await this.mailbox.request(
             SensorsLua.type,
-            {
-                type: "sub",
-                provider: provider,
-                sensor: sensorName,
-                useKnown: useKnown,
-                period: period
-            }
+            args
         );
-        if (result.sensorState == "err") {
+        if (result.appState == MailboxState.ERROR) {
             return {
                 type: SensorsLua.type,
                 state: MailboxState.ERROR,
@@ -74,6 +63,7 @@ export default class SensorsLua {
             }
         }
 
+        this.pollingRate = args.flushPeriod ?? 500;
         this.outputFile = result.out;
 
         this.lastReadingRaw = null;
@@ -83,7 +73,7 @@ export default class SensorsLua {
 
         return {
             type: SensorsLua.type,
-            state: result.sensorState,
+            state: result.appState,
             result: result.res
         };
     }
@@ -104,7 +94,7 @@ export default class SensorsLua {
         
         return {
             type: SensorsLua.type,
-            state: result.sensorState,
+            state: result.appState,
             result: result.res
         };
     }
@@ -116,6 +106,7 @@ export default class SensorsLua {
             samples: rawReading
         };
 
+        console.log(result);
         await this.interconnect.send(result);
     }
 

@@ -114,13 +114,14 @@ export default class FileManager {
 
     async handleStreaming(args, type) {
         if (type === "getStream") {
-            if (this.streaming) {
-                return {
-                    type: FileManager.type,
-                    state: MailboxState.ERROR,
-                    msg: "Already streaming"
-                };
-            }
+            // let lua handle this
+            // if (this.streaming) {
+            //     return {
+            //         type: FileManager.type,
+            //         state: MailboxState.ERROR,
+            //         msg: "Already streaming"
+            //     };
+            // }
 
             const result = await this.mailbox.request(
                 FileManager.type,

@@ -13,15 +13,13 @@ export default class LuaShell {
     }
 
     async execute(args) {
-        const code = args.code;
-
         try {
             const result = await this.mailbox.request(
                 LuaShell.type,
-                {code: code}
+                args
             );
 
-            const state = result.luaState;
+            const state = result.appState;
             const prints = result.print;
             if (state == MailboxState.ERROR) {
                 const reason = result.reason;

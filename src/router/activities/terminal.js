@@ -42,7 +42,7 @@ export default class Terminal {
         try {
             const result = await this.mailbox.request(
                 Terminal.type,
-                {cmd: command}
+                args
             );
 
             const exitCode = result.code;
