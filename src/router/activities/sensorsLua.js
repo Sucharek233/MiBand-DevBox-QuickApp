@@ -14,7 +14,7 @@ export default class SensorsLua {
         this.file = PromiseFile;
         this.outputFile = undefined;
 
-        this.pollingRate = 500;
+        this.pollingRate = 1000;
         this.isPolling = false;
         this.pollTimer = null;
         this.lastReadingRaw = null;
@@ -63,7 +63,7 @@ export default class SensorsLua {
             }
         }
 
-        this.pollingRate = args.flushPeriod ?? 500;
+        this.pollingRate = args.sendInterval ?? 1000;
         this.outputFile = result.out;
 
         this.lastReadingRaw = null;
