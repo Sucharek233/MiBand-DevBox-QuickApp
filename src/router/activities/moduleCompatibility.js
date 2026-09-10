@@ -42,14 +42,6 @@ export default class ModuleCompatibility {
     }
 
     checkCompatibility(modules) {
-        if (typeof(app.canIUse) != "function") {
-            return {
-                type: ModuleCompatibility.type,
-                state: MailboxState.ERROR,
-                msg: "Incompatible"
-            };
-        }
-
         if (typeof(modules) == "string") {
             modules = [modules];
         }
@@ -63,7 +55,19 @@ export default class ModuleCompatibility {
 
         const result = {};
         for (const module of modules) {
-            const compatible = app.canIUse(`@${module}`);
+            let compatible;
+            if (typeof(app.canIUse) === "function") {
+                compatible = app.canIUse(`@${module}`);
+            } else if (typeof($app_require$) === "function") {
+                compatible = Boolean(this.qjsShell.getModule(module));
+            } else {
+                return {
+                    type: ModuleCompatibility.type,
+                    state: MailboxState.ERROR,
+                    msg: "Incompatible"
+                };
+            }
+            
             result[module] = compatible;
         }
 
