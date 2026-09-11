@@ -16,6 +16,12 @@ export default class Terminal {
         const schema = {
             required: {
                 cmd: "string"
+            },
+            optional: {
+                cwd: {
+                    type: "string",
+                    default: "/"
+                }
             }
         };
 
