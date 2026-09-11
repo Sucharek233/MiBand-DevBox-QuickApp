@@ -1,6 +1,6 @@
 {
-    "package": "com.sucharek.miband_interconnect_test",
-    "name": "interconnect-demo-2",
+    "package": "com.sucharek.devbox",
+    "name": "DevBox",
     "versionName": "1.0.0",
     "versionCode": 1,
     "minPlatformVersion": 1200,
