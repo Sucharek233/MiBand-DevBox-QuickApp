@@ -1,6 +1,50 @@
-import PromiseFile from "../../helpers/promiseFile"
-import PromiseBrightness from "../../helpers/promiseBrightness"
+import PromiseFile from "../../helpers/promiseFile";
+import PromiseBrightness from "../../helpers/promiseBrightness";
 import MailboxState from "../../constants/mailboxStates";
+import ArgsValidator from "../../helpers/argsValidator";
+
+const handlers = {
+    sub: {
+        required: {
+            sensor: "string"
+        },
+
+        optional: {
+            provider: {
+                type: "string",
+                default: "file"
+            },
+            sendInterval: {
+                type: "number",
+                default: 1000
+            },
+            
+            // lua specific
+            useKnown: {
+                type: "boolean",
+                default: true
+            },
+            dataPollPeriod: {
+                type: "number",
+                default: 80
+            },
+            streamEntries: {
+                type: "number",
+                default: 10
+            }
+        },
+
+        run: async function(self, args) {
+            return await self.subscribe(args);
+        }
+    },
+
+    unsub: {
+        run: async function(self, args) {
+            return await self.unsubscribe(args);
+        }
+    }
+};
 
 export default class SensorsLua {
     static type = "sensorsLua";
@@ -10,7 +54,7 @@ export default class SensorsLua {
         this.mailbox = mailbox;
         this.interconnect = interconnect;
 
-        this.brightness = PromiseBrightness
+        this.brightness = PromiseBrightness;
         this.file = PromiseFile;
         this.outputFile = undefined;
 
@@ -21,33 +65,48 @@ export default class SensorsLua {
     }
     
     async handle(message) {
-        return await this.run(message.args);
+        const args = message.args || {};
+        const type = args.type;
+
+        const handler = handlers[type];
+
+        if (handler) {
+            const validation = ArgsValidator.validate(args, handler);
+
+            if (!validation.valid) {
+                return {
+                    type: SensorsLua.type,
+                    state: MailboxState.ERROR,
+                    msg: validation.error
+                };
+            }
+
+            try {
+                return await handler.run(this, args);
+            } catch (e) {
+                return {
+                    type: SensorsLua.type,
+                    state: MailboxState.ERROR,
+                    msg: e.message,
+                    stack: e.stack
+                };
+            }
+        }
+
+        return await this.run(args);
     }
 
     async run(args) {
-        const type = args.type;
-
-        if (type.startsWith("list")) {
-            const sensorList = await this.getSensorList(type);
-            return {
-                type: SensorsLua.type,
-                state: sensorList.appState,
-                res: sensorList.res
-            }
-        } else if (type == "sub") {
-            return await this.subscribe(args);
-        } else if (type == "unsub") {
-            return await this.unsubscribe();
-        }
-    }
-
-    async getSensorList(type) {
         const result = await this.mailbox.request(
             SensorsLua.type,
-            {type: type}
+            args
         );
 
-        return result;
+        return {
+            type: SensorsLua.type,
+            state: result.appState,
+            res: result.res
+        };
     }
 
     async subscribe(args) {
@@ -55,18 +114,20 @@ export default class SensorsLua {
             SensorsLua.type,
             args
         );
+        
         if (result.appState == MailboxState.ERROR) {
             return {
                 type: SensorsLua.type,
                 state: MailboxState.ERROR,
                 result: result.res
-            }
+            };
         }
 
-        this.pollingRate = args.sendInterval ?? 1000;
+        this.pollingRate = args.sendInterval;
         this.outputFile = result.out;
 
         this.lastReadingRaw = null;
+
         if (this.outputFile) {
             this.startPolling();
         }
@@ -78,20 +139,24 @@ export default class SensorsLua {
         };
     }
 
-    async unsubscribe() {
+    async unsubscribe(args) {
         this.stopPolling();
 
         const result = await this.mailbox.request(
             SensorsLua.type,
-            {type: "unsub"}
+            args
         );
 
-        // clean up output file
         if (this.outputFile) {
             const outputFileExists = await this.file.exists(this.outputFile);
-            if (outputFileExists) await this.file.delete(this.outputFile);
+
+            if (outputFileExists) {
+                await this.file.delete(this.outputFile);
+            }
+
+            this.outputFile = undefined;
         }
-        
+
         return {
             type: SensorsLua.type,
             state: result.appState,
@@ -106,19 +171,19 @@ export default class SensorsLua {
             samples: rawReading
         };
 
-        console.log(result);
         await this.interconnect.send(result);
     }
 
     startPolling() {
         if (this.isPolling) return;
-        
+
         this.isPolling = true;
         this.poll();
     }
     
     async poll() {
         if (!this.isPolling || !this.outputFile) return;
+
         this.brightness.setKeepScreenOn(true);
 
         try {
@@ -126,7 +191,6 @@ export default class SensorsLua {
 
             if (rawContent && rawContent !== this.lastReadingRaw) {
                 this.lastReadingRaw = rawContent;
-
                 this.sendData(rawContent);
             }
         } catch (fileErr) {
@@ -134,12 +198,16 @@ export default class SensorsLua {
         }
 
         if (this.isPolling) {
-            this.pollTimer = setTimeout(() => this.poll(), this.pollingRate);
+            this.pollTimer = setTimeout(
+                () => this.poll(),
+                this.pollingRate
+            );
         }
     }
 
     stopPolling() {
         this.isPolling = false;
+
         if (this.pollTimer) {
             clearTimeout(this.pollTimer);
             this.pollTimer = null;

@@ -12,6 +12,8 @@ const handlers = {
                 type: "number",
                 default: 30 * 1024
             },
+
+            // lua specific
             lSize: {
                 type: "number",
                 default: 512 * 1024
