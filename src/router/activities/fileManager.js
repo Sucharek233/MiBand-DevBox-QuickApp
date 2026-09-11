@@ -1,5 +1,45 @@
 import MailboxState from "../../constants/mailboxStates";
 import promiseFile from "../../helpers/promiseFile";
+import ArgsValidator from "../../helpers/argsValidator";
+
+const handlers = {
+    getStream: {
+        required: {
+            path: "string"
+        },
+        optional: {
+            jSize: {
+                type: "number",
+                default: 30 * 1024
+            },
+            lSize: {
+                type: "number",
+                default: 512 * 1024
+            },
+            b64: {
+                type: "boolean",
+                default: true
+            }
+        },
+
+        run: async function(self, args) {
+            return await self.startStream(args);
+        }
+    },
+
+    chunk: {
+        run: async function(self, _) {
+            return await self.nextChunk();
+        }
+    },
+
+    stop: {
+        // args passed to pass type: "stop"
+        run: async function(self, args) {
+            return await self.stopStream(args);
+        }
+    }
+};
 
 export default class FileManager {
     static type = "io";
@@ -24,12 +64,34 @@ export default class FileManager {
     }
 
     async handle(message) {
-        const type = message?.args?.type;
-        if (type === "getStream" || type === "chunk") {
-            return await this.handleStreaming(message.args, type);
+        const args = message?.args || {};
+        const type = args.type;
+    
+        const handler = handlers[type];
+    
+        if (handler) {
+            const validation = ArgsValidator.validate(args, handler);
+            if (!validation.valid) {
+                return {
+                    type: FileManager.type,
+                    state: MailboxState.ERROR,
+                    msg: validation.error
+                };
+            }
+    
+            try {
+                return await handler.run(this, args);
+            } catch (e) {
+                return {
+                    type: FileManager.type,
+                    state: MailboxState.ERROR,
+                    msg: e.message,
+                    stack: e.stack
+                };
+            }
         }
-
-        return await this.run(message.args);
+    
+        return await this.relay(args);
     }
 
     async readChunk() {
@@ -112,82 +174,69 @@ export default class FileManager {
         return await this.readChunk();
     }
 
-    async handleStreaming(args, type) {
-        if (type === "getStream") {
-            // let lua handle this
-            // if (this.streaming) {
-            //     return {
-            //         type: FileManager.type,
-            //         state: MailboxState.ERROR,
-            //         msg: "Already streaming"
-            //     };
-            // }
+    async startStream(args) {
+        // don't pass jSize to lua
+        let jSize = args.jSize;
+        delete args.jSize;
 
-            const result = await this.mailbox.request(
-                FileManager.type,
-                args,
-                10000
-            );
+        const result = await this.mailbox.request(
+            FileManager.type,
+            args,
+            10000
+        );
 
-            if (result.appState === MailboxState.ERROR) {
-                return {
-                    type: FileManager.type,
-                    state: MailboxState.ERROR,
-                    msg: result.res
-                };
-            }
-
-            let jSize;
-            if (result.jSize > FileManager.maxJChunkSize) {
-                jSize = FileManager.maxJChunkSize;
-            } else {
-                jSize = result.jSize ?? 30 * 1024;
-            }
-
-            const res = result.res;
-            this.fileSize = res.fileSize;
-            this.chunkPath = res.path;
-            this.chunkSize = jSize;
-            this.chunkSize = 0;
-            this.chunkPosition = 0;
-            this.streaming = true;
-
+        if (result.appState === MailboxState.ERROR) {
             return {
                 type: FileManager.type,
-                state: MailboxState.DONE,
-                res: res
+                state: MailboxState.ERROR,
+                msg: result.res
             };
-
-        } else if (type === "chunk") {
-            return await this.nextChunk();
-
-        } else if (type === "stop") {
-            const result = await this.mailbox.request(
-                FileManager.type,
-                args,
-                10000
-            );
-
-            this.streaming = false;
-            this.fileSize = -1;
-            this.chunkSize = -1;
-            this.chunkPosition = 0;
-
-            const res = {
-                type: FileManager.type,
-                state: result.appState,
-            };
-            if (result.appState == MailboxState.DONE) {
-                res.res = result.res; // cursed lmao
-            } else {
-                res.msg = result.res;
-            }
-            
-            return res;
         }
+
+        if (jSize > FileManager.maxJChunkSize) {
+            jSize = FileManager.maxJChunkSize;
+        }
+
+        const res = result.res;
+        this.fileSize = res.fileSize;
+        this.chunkPath = res.path;
+        this.chunkLimit = jSize;
+        this.chunkSize = 0;
+        this.chunkPosition = 0;
+        this.streaming = true;
+
+        return {
+            type: FileManager.type,
+            state: MailboxState.DONE,
+            res: res
+        };
     }
 
-    async run(args) {
+    async stopStream(args) {
+        const result = await this.mailbox.request(
+            FileManager.type,
+            args
+        );
+
+        this.streaming = false;
+        this.fileSize = -1;
+        this.chunkSize = -1;
+        this.chunkPosition = 0;
+
+        const res = {
+            type: FileManager.type,
+            state: result.appState,
+        };
+        if (result.appState === MailboxState.DONE) {
+            res.res = result.res; // cursed lmao
+        } else {
+            res.msg = result.res;   
+        }
+        
+        return res;
+    }
+
+    async relay(args) {
         try {
             const result = await this.mailbox.request(
                 FileManager.type,
