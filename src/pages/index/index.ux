@@ -68,18 +68,18 @@
     import Router from "../../router/router";
 
     // Activities
-    import Terminal from "../../router/activities/terminal"
-    import QJSShell from "../../router/activities/quickjs"
-    import FileManager from "../../router/activities/fileManager"
-    import Sensors from "../../router/activities/sensors/sensors"
-    import SensorsLua from "../../router/activities/sensorsLua"
-    import ModuleCompatibility from "../../router/activities/moduleCompatibility"
-    import Ping from "../../router/activities/ping"
-    import LuaShell from "../../router/activities/luaShell"
-    import SystemInfo from "../../router/activities/systemInfo"
-    import SystemInfoLua from "../../router/activities/systemInfoLua"
-    import Apps from "../../router/activities/apps"
-    import Misc from "../../router/activities/misc"
+    import Terminal from "../../router/activities/lua/terminal"
+    import QJSShell from "../../router/activities/qjs/quickjs"
+    import FileManager from "../../router/activities/lua/fileManager"
+    import Sensors from "../../router/activities/qjs/sensors/sensors"
+    import SensorsLua from "../../router/activities/lua/sensorsLua"
+    import ModuleCompatibility from "../../router/activities/qjs/moduleCompatibility"
+    import Ping from "../../router/activities/lua/ping"
+    import LuaShell from "../../router/activities/lua/luaShell"
+    import SystemInfo from "../../router/activities/qjs/systemInfo"
+    import SystemInfoLua from "../../router/activities/lua/systemInfoLua"
+    import Apps from "../../router/activities/lua/apps"
+    import Misc from "../../router/activities/qjs/misc"
 
     export default {
         private: {
@@ -190,7 +190,7 @@
             this.uiData.pingingLua = true;
             
             this.setLuaState("pinging");
-            const result = await this.activityClasses.ping.ping({type: "lua"});
+            const result = await this.activityClasses.ping.pingLua();
             if (result.state == MailboxState.DONE) {
                 const totalTime = result.endTime - result.startTime;
                 

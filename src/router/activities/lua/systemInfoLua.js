@@ -1,4 +1,4 @@
-import MailboxState from "../../constants/mailboxStates";
+import MailboxState from "../../../constants/mailboxStates";
 
 export default class SystemInfoLua {
     static type = "sysInfoLua";

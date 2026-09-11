@@ -1,6 +1,6 @@
-import MailboxState from "../../constants/mailboxStates";
-import PromiseFile from "../../helpers/promiseFile";
-import ArgsValidator from "../../helpers/argsValidator";
+import MailboxState from "../../../constants/mailboxStates";
+import PromiseFile from "../../../helpers/promiseFile";
+import ArgsValidator from "../../../helpers/argsValidator";
 
 export default class Terminal {
     static type = "cmd";

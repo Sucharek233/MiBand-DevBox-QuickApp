@@ -1,5 +1,5 @@
-import MailboxState from "../../constants/mailboxStates";
-import ArgsValidator from "../../helpers/argsValidator";
+import MailboxState from "../../../constants/mailboxStates";
+import ArgsValidator from "../../../helpers/argsValidator";
 import router from "@system.router";
 
 const handlers = {
