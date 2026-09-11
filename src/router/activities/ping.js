@@ -1,4 +1,19 @@
 import MailboxState from "../../constants/mailboxStates";
+import ArgsValidator from "../../helpers/argsValidator";
+
+const handlers = {
+    lua: {
+        run: async function(self, _) {
+            return await self.pingLua();
+        }
+    },
+
+    qjs: {
+        run: async function(self, _) {
+            return self.pingQjs();
+        }
+    }
+};
 
 export default class Ping {
     static type = "ping";
@@ -6,75 +21,88 @@ export default class Ping {
 
     constructor(mailbox) {
         this.mailbox = mailbox;
-
-        // qjs doesn't need a pinging state
         this.pingingLua = false;
     }
     
     async handle(message) {
-        return await this.ping(message.args);
-    }
+        const args = message.args || {};
+        const handler = handlers[args.type];
 
-    async ping(args) {
-        if (this.pingingLua) return {
-            type: Ping.type,
-            state: MailboxState.ERROR,
-            msg: "Already pinging",
-        };
+        if (!handler) {
+            return {
+                type: Ping.type,
+                state: MailboxState.ERROR,
+                msg: "Unknown type"
+            };
+        }
+
+        const validation = ArgsValidator.validate(args, handler);
+
+        if (!validation.valid) {
+            return {
+                type: Ping.type,
+                state: MailboxState.ERROR,
+                msg: validation.error
+            };
+        }
 
         try {
-            const type = args.type;
-            const startTime = Date.now();
-
-            if (type == "lua") {
-                this.pingingLua = true;
-
-                await this.mailbox.request(
-                    Ping.type,
-                    {},
-                    2500
-                );
-                this.pingingLua = false;
-
-                const endTime = Date.now();
-
-                // only send timestamps
-                return {
-                    type: Ping.type,
-                    state: MailboxState.DONE,
-                    startTime: startTime,
-                    endTime: endTime,
-                };
-
-            } else if (type == "qjs") {
-                // just return start time
-                return {
-                    type: Ping.type,
-                    state: MailboxState.DONE,
-                    ackTime: startTime,
-                };
-
-            } else {
-                return {
-                    type: Ping.type,
-                    state: MailboxState.ERROR,
-                    msg: "Unknown type",
-                };
-            }
+            return await handler.run(this, args);
         } catch (e) {
             this.pingingLua = false;
+
             if (e.message == "Mailbox timeout") {
                 return {
                     type: Ping.type,
                     state: MailboxState.TIMEOUT
-                }
+                };
             }
+
             return {
                 type: Ping.type,
                 state: MailboxState.ERROR,
                 msg: e.message,
                 stack: e.stack
-            }
+            };
         }
+    }
+
+    async pingLua() {
+        if (this.pingingLua) {
+            return {
+                type: Ping.type,
+                state: MailboxState.ERROR,
+                msg: "Already pinging"
+            };
+        }
+
+        this.pingingLua = true;
+
+        const startTime = Date.now();
+
+        await this.mailbox.request(
+            Ping.type,
+            {},
+            2500
+        );
+
+        this.pingingLua = false;
+
+        const endTime = Date.now();
+
+        return {
+            type: Ping.type,
+            state: MailboxState.DONE,
+            startTime: startTime,
+            endTime: endTime
+        };
+    }
+
+    pingQjs() {
+        return {
+            type: Ping.type,
+            state: MailboxState.DONE,
+            ackTime: Date.now()
+        };
     }
 }
