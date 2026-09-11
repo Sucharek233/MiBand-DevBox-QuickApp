@@ -1,5 +1,28 @@
 import app from "@system.app"
 import MailboxState from "../../constants/mailboxStates";
+import ArgsValidator from "../../helpers/argsValidator";
+
+const handlers = {
+    compat: {
+        required: {
+            modules: "array"
+        },
+
+        run: function(self, args) {
+            return self.checkCompatibility(args.modules);
+        }
+    },
+
+    funcs: {
+        required: {
+            module: "string"
+        },
+
+        run: function(self, args) {
+            return self.getModule(args.module);
+        }
+    }
+};
 
 export default class ModuleCompatibility {
     static type = "modules";
@@ -10,26 +33,31 @@ export default class ModuleCompatibility {
     }
 
     async handle(message) {
-        return this.check(message.args);
-    }
-
-    check(args) {
+        const args = message.args || {};
         const type = args.type;
 
+        const handler = handlers[type];
+
+        if (!handler) {
+            return {
+                type: ModuleCompatibility.type,
+                state: MailboxState.ERROR,
+                msg: "Unknown type"
+            };
+        }
+
+        const validation = ArgsValidator.validate(args, handler);
+
+        if (!validation.valid) {
+            return {
+                type: ModuleCompatibility.type,
+                state: MailboxState.ERROR,
+                msg: validation.error
+            };
+        }
+
         try {
-            if (type == "compat") {
-                const modules = args.modules;
-                return this.checkCompatibility(modules);
-            } else if (type == "funcs") {
-                const module = args.module;
-                return this.getModule(module);
-            } else {
-                return {
-                    type: ModuleCompatibility.type,
-                    state: MailboxState.ERROR,
-                    msg: "No type specified"
-                };
-            }
+            return handler.run(this, args);
         } catch (e) {
             return {
                 type: ModuleCompatibility.type,
@@ -38,24 +66,18 @@ export default class ModuleCompatibility {
                 stack: e.stack
             };
         }
-        
     }
 
     checkCompatibility(modules) {
         if (typeof(modules) == "string") {
             modules = [modules];
         }
-        if (!modules || typeof(modules) != "object") {
-            return {
-                type: ModuleCompatibility.type,
-                state: MailboxState.ERROR,
-                msg: "Invalid modules list"
-            };
-        }
 
         const result = {};
+
         for (const module of modules) {
             let compatible;
+
             if (typeof(app.canIUse) === "function") {
                 compatible = app.canIUse(`@${module}`);
             } else if (typeof($app_require$) === "function") {
@@ -67,7 +89,7 @@ export default class ModuleCompatibility {
                     msg: "Incompatible"
                 };
             }
-            
+
             result[module] = compatible;
         }
 
@@ -79,17 +101,9 @@ export default class ModuleCompatibility {
     }
 
     getModule(module) {
-        if (!module || module.trim() == "") {
-            return {
-                type: ModuleCompatibility.type,
-                state: MailboxState.ERROR,
-                msg: "Invalid module"
-            };
-        }
-
         const res = this.qjsShell.getModule(module);
         const functions = this.qjsShell.safeStringify(res);
-        
+
         return {
             type: ModuleCompatibility.type,
             state: MailboxState.DONE,
