@@ -1,6 +1,49 @@
 import PromiseBrightness from "../../../helpers/promiseBrightness"
 import SensorProvider from "./providers/system.sensor";
 import MailboxState from "../../../constants/mailboxStates";
+import ArgsValidator from "../../../helpers/argsValidator";
+
+const handlers = {
+    list: {
+        run: async function(self, _) {
+            return await self.returnList();
+        }
+    },
+
+    listLite: {
+        run: async function(self, _) {
+            return await self.returnListLite();
+        }
+    },
+
+    sub: {
+        required: {
+            sensor: "string"
+        },
+
+        optional: {
+            streamEntries: {
+                type: "number",
+                default: 10
+            },
+
+            sendInterval: {
+                type: "number",
+                default: 1000
+            }
+        },
+
+        run: async function(self, args) {
+            return await self.subscribe(args);
+        }
+    },
+
+    unsub: {
+        run: async function(self, _) {
+            return await self.unsubscribe();
+        }
+    }
+};
 
 export default class Sensors {
     static type = "sensors";
@@ -17,46 +60,42 @@ export default class Sensors {
         this.data = [];
 
         this.maxEntriesPerSend = 10;
-        this.sendInterval = 1000
+        this.sendInterval = 1000;
         this.sendTimer = null;
     }
 
     async handle(message) {
-        return await this.prepare(message.args);
-    }
-
-    async prepare(args) {
-        const sensor = args.sensor;
+        const args = message.args || {};
         const type = args.type;
 
-        if (!type) {
+        const handler = handlers[type];
+
+        if (!handler) {
             return {
                 type: Sensors.type,
                 state: MailboxState.ERROR,
-                msg: "No type"
-            }
+                msg: "Unknown type"
+            };
         }
 
-        if (type == "list") {
-            return await this.returnList();
+        const validation = ArgsValidator.validate(args, handler);
+        if (!validation.valid) {
+            return {
+                type: Sensors.type,
+                state: MailboxState.ERROR,
+                msg: validation.error
+            };
+        }
 
-        } else if (type == "listLite") {
-            return await this.returnListLite();
-
-        } else if (type == "sub") {
-            if (!sensor) {
-                return {
-                    type: Sensors.type,
-                    state: MailboxState.ERROR,
-                    msg: "No sensor"
-                }
-            }
-            
-            return await this.subscribe(args);
-            
-        } else if (type == "unsub") {
-            await this.brightness.setKeepScreenOn(false);
-            return await this.unsubscribe();
+        try {
+            return await handler.run(this, args);
+        } catch (e) {
+            return {
+                type: Sensors.type,
+                state: MailboxState.ERROR,
+                msg: e.message,
+                stack: e.stack
+            };
         }
     }
 
@@ -66,7 +105,7 @@ export default class Sensors {
             type: Sensors.type,
             state: MailboxState.DONE,
             res: sensorList
-        }
+        };
     }
 
     async returnListLite() {
@@ -75,27 +114,26 @@ export default class Sensors {
             type: Sensors.type,
             state: MailboxState.DONE,
             res: sensorList
-        }
+        };
     }
 
     async sendData() {
         await this.brightness.setKeepScreenOn(true);
+
         if (this.data.length === 0) {
             return;
         }
-    
+
         let samples;
-    
+
         if (this.data.length <= this.maxEntriesPerSend) {
             samples = this.data;
         } else {
             const step = this.data.length / this.maxEntriesPerSend;
             samples = [];
-    
+
             for (let i = 0; i < this.maxEntriesPerSend; i++) {
-                samples.push(
-                    this.data[Math.floor(i * step)]
-                );
+                samples.push(this.data[Math.floor(i * step)]);
             }
         }
 
@@ -104,6 +142,7 @@ export default class Sensors {
             state: MailboxState.STREAM,
             samples: samples
         };
+
         console.log(result);
 
         await this.interconnect.send(result);
@@ -133,20 +172,9 @@ export default class Sensors {
             };
         }
 
-        if (!args.sensor || args.sensor.trim() == "") {
-            return {
-                type: Sensors.type,
-                state: MailboxState.ERROR,
-                msg: "No sensor specified"
-            };
-        }
-
         try {
-            const entriesPerSend = args.streamEntries ?? 10;
-            const sendInterval = args.sendInterval ?? 1000;
-
-            this.maxEntriesPerSend = entriesPerSend;
-            this.sendInterval = sendInterval;
+            this.maxEntriesPerSend = args.streamEntries;
+            this.sendInterval = args.sendInterval;
 
             this.subscribedSensor = this.sensorProvider.getSensor(
                 args.sensor,
@@ -155,6 +183,7 @@ export default class Sensors {
             );
 
             this.subscribed = true;
+
             setTimeout(() => {
                 this.startSendLoop();
             }, this.sendInterval);
@@ -165,8 +194,8 @@ export default class Sensors {
                 msg: "Subscribed"
             };
         } catch (e) {
-            // Rollback state if initialization fails
             this.subscribed = false;
+
             return {
                 type: Sensors.type,
                 state: MailboxState.ERROR,
@@ -212,6 +241,7 @@ export default class Sensors {
             this.data = [];
 
             this.subscribed = false;
+
             return {
                 type: Sensors.type,
                 state: MailboxState.DONE,

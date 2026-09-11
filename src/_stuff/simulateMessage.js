@@ -46,7 +46,7 @@ aiot.appCtx.messageReceived(
 aiot.appCtx.messageReceived(
     JSON.stringify(
         {
-            type: "sensor",
+            type: "sensors",
             args: {
                 type: "sub",
                 sensor: "Accelerometer"
