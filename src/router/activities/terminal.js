@@ -1,5 +1,6 @@
 import MailboxState from "../../constants/mailboxStates";
-import PromiseFile from "../../helpers/promiseFile"
+import PromiseFile from "../../helpers/promiseFile";
+import ArgsValidator from "../../helpers/argsValidator";
 
 export default class Terminal {
     static type = "cmd";
@@ -10,13 +11,31 @@ export default class Terminal {
     }
     
     async handle(message) {
-        return await this.run(message.args);
+        const args = message.args || {};
+
+        const schema = {
+            required: {
+                cmd: "string"
+            }
+        };
+
+        const validation = ArgsValidator.validate(args, schema);
+        if (!validation.valid) {
+            return {
+                type: Terminal.type,
+                state: MailboxState.ERROR,
+                msg: validation.error
+            };
+        }
+
+        return await this.run(args);
     }
 
     handleCmdFail(err) {
         let errMsg = err;
-        let stack = ""
-        if (typeof(err) == "object") {
+        let stack = "";
+
+        if (typeof err == "object") {
             errMsg = err.message;
             stack = err.stack;
         }
@@ -26,19 +45,10 @@ export default class Terminal {
             state: MailboxState.ERROR,
             msg: errMsg,
             stack: stack
-        }
+        };
     }
 
     async run(args) {
-        const command = args.cmd;
-        if (!command) {
-            return {
-                type: Terminal.type,
-                state: MailboxState.ERROR,
-                msg: "No cmd"
-            }
-        }
-
         try {
             const result = await this.mailbox.request(
                 Terminal.type,
@@ -62,10 +72,9 @@ export default class Terminal {
                 state: MailboxState.DONE,
                 res: cmdOut,
                 code: exitCode
-            }
+            };
         } catch (e) {
             return this.handleCmdFail(e);
         }
-        
     }
 }
