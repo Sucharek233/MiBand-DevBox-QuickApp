@@ -1,4 +1,5 @@
 import MailboxState from "../../constants/mailboxStates";
+import ArgsValidator from "../../helpers/argsValidator";
 
 export default class QJSShell {
     static type = "qjs";
@@ -7,7 +8,7 @@ export default class QJSShell {
     constructor(appCtx, global) {
         this.context = appCtx;
         this.global = global;
-        
+
 
         this.maxString = 1024;
 
@@ -18,7 +19,24 @@ export default class QJSShell {
     }
 
     async handle(message) {
-        return await this.execute(message.args.code);
+        const args = message.args || {};
+
+        const schema = {
+            required: {
+                code: "string"
+            }
+        };
+
+        const validation = ArgsValidator.validate(args, schema);
+        if (!validation.valid) {
+            return {
+                type: QJSShell.type,
+                state: MailboxState.ERROR,
+                msg: validation.error
+            };
+        }
+
+        return await this.execute(args.code);
     }
 
     safeStringify(value) {
@@ -126,14 +144,6 @@ export default class QJSShell {
     }
 
     async execute(code) {
-        if (!code) {
-            return {
-                type: QJSShell.type,
-                state: MailboxState.ERROR,
-                msg: "Empty code",
-            }
-        }
-
         try {
             const logs = [];
             const fn = new Function(
