@@ -68,18 +68,19 @@
     import Router from "../../router/router";
 
     // Activities
-    import Terminal from "../../router/activities/lua/terminal"
     import QJSShell from "../../router/activities/qjs/quickjs"
-    import FileManager from "../../router/activities/lua/fileManager"
-    import Sensors from "../../router/activities/qjs/sensors/sensors"
-    import SensorsLua from "../../router/activities/lua/sensorsLua"
     import ModuleCompatibility from "../../router/activities/qjs/moduleCompatibility"
-    import Ping from "../../router/activities/lua/ping"
-    import LuaShell from "../../router/activities/lua/luaShell"
     import SystemInfo from "../../router/activities/qjs/systemInfo"
-    import SystemInfoLua from "../../router/activities/lua/systemInfoLua"
-    import Apps from "../../router/activities/lua/apps"
+    import Sensors from "../../router/activities/qjs/sensors/sensors"
     import Misc from "../../router/activities/qjs/misc"
+
+    import Terminal from "../../router/activities/lua/terminal"
+    import LuaShell from "../../router/activities/lua/luaShell"
+    import SystemInfoLua from "../../router/activities/lua/systemInfoLua"
+    import FileManager from "../../router/activities/lua/fileManager"
+    import SensorsLua from "../../router/activities/lua/sensorsLua"
+    import Apps from "../../router/activities/lua/apps"
+    import Ping from "../../router/activities/lua/ping"
 
     export default {
         private: {
@@ -165,11 +166,6 @@
             }
         },
         appendLog(message) {
-            // console.log(message); // for now :)
-
-            // const line =
-            //     `[${new Date().toLocaleTimeString()}] ${message}\n`;
-
             const line =
                 `${message}\n`;
 
@@ -375,12 +371,12 @@
             try {
                 const result = await targetRoute.handler(msgObj);
 
-                console.log("Res", result);
+                // console.log("Res", result);
                 this.appendLog(`${type} finished, sending...`);
 
                 await this.client.send(result);
             } catch (e) {
-                console.error(e?.message, e?.stack);
+                // console.error(e?.message, e?.stack);
                 this.appendLog(`${type} failed: ${e?.message ?? e}`);
 
                 // last resort
