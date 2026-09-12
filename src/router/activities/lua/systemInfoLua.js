@@ -28,7 +28,7 @@ export default class SystemInfoLua {
             return {
                 type: SystemInfoLua.type,
                 state: MailboxState.ERROR,
-                msg: e.msg,
+                msg: e.message,
                 stack: e.stack
             }
         }

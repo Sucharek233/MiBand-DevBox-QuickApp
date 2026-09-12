@@ -143,8 +143,6 @@ export default class Sensors {
             samples: samples
         };
 
-        console.log(result);
-
         await this.interconnect.send(result);
 
         this.data.length = 0;
