@@ -350,7 +350,6 @@
             const msgObj = JSON.parse(msg) ?? {};
             const type = msgObj?.type;
             this.appendLog(`Received request for ${type}`);
-            // console.log(msgObj);
             
             if (!type) {
                 this.appendLog(`No type specified!`);
