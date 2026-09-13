@@ -27,13 +27,14 @@
 
 /* ---------- Status ---------- */
 
-.status-group {
+.statusGroup {
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 100%;
 }
 
-.status-btn {
+.statusBtn {
     width: 90%;
     height: 70px;
     border-radius: 35px;
@@ -43,39 +44,39 @@
 }
 
 /* Status colors */
-.status-idle {
+.statusIdle {
     background-color: #0f73ff;
     color: white;
     border: 2px solid #3b8cff;
 }
-.status-success {
+.statusSuccess {
     background-color: #2fbf5b;
     color: white;
     border: 2px solid #55d878;
 }
-.status-busy {
+.statusBusy {
     background-color: #777777;
     color: white;
     border: 2px solid #999999;
 }
-.status-timeout {
+.statusTimeout {
     background-color: #e68a00;
     color: white;
     border: 2px solid #ffad33;
 }
-.status-error {
+.statusError {
     background-color: #d64545;
     color: white;
     border: 2px solid #f06a6a;
 }
-.status-disconnected {
+.statusDisconnected {
     background-color: #2b2b2b;
     color: white;
     border: 2px solid #555555;
 }
 
 /* ---------- Logs ---------- */
-.log-panel {
+.logPanel {
     display: flex;
     flex-direction: column;
     flex: 1;
@@ -85,7 +86,7 @@
     height: 100%;
 }
 
-.log-header {
+.logHeader {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -94,19 +95,18 @@
     min-height: 30px;
 }
 
-.log-title {
-
+.logTitle {
     color: white;
     font-size: 24px;
     font-weight: bold;
 }
 
-.clear-btn {
+.clearBtn {
     color: #0faeff;
     font-size: 24px;
 }
 
-.log-area {
+.logArea {
     width: 100%;
     background-color: transparent;
     color: #dddddd;
@@ -120,14 +120,13 @@
 
 /* ---------- Exit ---------- */
 
-.exit-btn {
-    width: 100%;
+.extiBtn {
+    width: 90%;
     height: 70px;
-
     border-radius: 35px;
 
     background-color: #cc4444;
-
+    border: 2px solid #f06a6a;
     color: white;
 
     font-size: 24px;

@@ -2,53 +2,49 @@
     <div class="page">
 
         <div class="mainContent">
-            <!-- Title -->
             <text class="header">DevBox</text>
 
-            <!-- Status -->
-            <div class="status-group">
-
+            <div class="statusGroup">
                 <input
                     type="button"
                     id="connectBtn"
-                    class="status-btn {{uiData.connectionClass}}"
+                    class="statusBtn {{uiData.connectionClass}}"
                     value="{{uiData.connectionText}}"
                     @click="connect"
                 />
 
                 <input
                     type="button"
-                    class="status-btn {{uiData.luaClass}}"
+                    class="statusBtn {{uiData.luaClass}}"
                     value="{{uiData.luaText}}"
                     @click="pingLua"
                 />
-
             </div>
 
-            <!-- Logs -->
-            <div class="log-panel">
+            <div class="logPanel">
 
-                <div class="log-header">
-                    <text class="log-title">Logs</text>
+                <div class="logHeader">
+                    <text class="logTitle">Logs</text>
 
                     <text
-                        class="clear-btn"
+                        class="clearBtn"
                         @click="clearLogs"
                     >
                         Clear
                     </text>
                 </div>
 
-                <text class="log-area">{{uiData.logText}}</text>
+                <text class="logArea">{{uiData.logText}}</text>
             </div>
 
-            <!-- Bottom button -->
-            <input
-                type="button"
-                class="exit-btn"
-                value="Exit"
-                @click="exit"
-            />
+            <div class="statusGroup">
+                <input
+                    type="button"
+                    class="extiBtn"
+                    value="Exit"
+                    @click="exit"
+                />
+            </div>
         </div>
 
         <div class="screenSaver {{uiData.scrSaverOpen}}" @click="closeScrSaver">
@@ -87,10 +83,10 @@
             // for UI
             uiData: {
                 connectionText: "Connect",
-                connectionClass: "status-idle",
+                connectionClass: "statusIdle",
 
                 luaText: "Ping Lua",
-                luaClass: "status-idle",
+                luaClass: "statusIdle",
                 pingingLua: false,
 
                 logText: "",
@@ -118,27 +114,27 @@
             switch (state) {
                 case "idle":
                     this.uiData.connectionText = "Connect";
-                    this.uiData.connectionClass = "status-idle";
+                    this.uiData.connectionClass = "statusIdle";
                     break;
 
                 case "connecting":
                     this.uiData.connectionText = "Connecting...";
-                    this.uiData.connectionClass = "status-busy";
+                    this.uiData.connectionClass = "statusBusy";
                     break;
 
                 case "connected":
                     this.uiData.connectionText = "Connected";
-                    this.uiData.connectionClass = "status-success";
+                    this.uiData.connectionClass = "statusSuccess";
                     break;
 
                 case "disconnected":
                     this.uiData.connectionText = "Disconnected";
-                    this.uiData.connectionClass = "status-disconnected";
+                    this.uiData.connectionClass = "statusDisconnected";
                     break;
 
                 case "error":
                     this.uiData.connectionText = "Connection Failed";
-                    this.uiData.connectionClass = "status-error";
+                    this.uiData.connectionClass = "statusError";
                     break;
             }
         },
@@ -146,27 +142,27 @@
             switch (state) {
                 case "idle":
                     this.uiData.luaText = "Ping Lua";
-                    this.uiData.luaClass = "status-idle";
+                    this.uiData.luaClass = "statusIdle";
                     break;
 
                 case "pinging":
                     this.uiData.luaText = "Pinging...";
-                    this.uiData.luaClass = "status-busy";
+                    this.uiData.luaClass = "statusBusy";
                     break;
 
                 case "online":
                     this.uiData.luaText = `Lua OK • ${ms} ms`;
-                    this.uiData.luaClass = "status-success";
+                    this.uiData.luaClass = "statusSuccess";
                     break;
 
                 case "timeout":
-                this.uiData.luaText = "Lua Timeout";
-                    this.uiData.luaClass = "status-timeout";
+                    this.uiData.luaText = "Lua Timeout";
+                    this.uiData.luaClass = "statusTimeout";
                     break;
 
                 case "error":
                     this.uiData.luaText = "Lua Fail";
-                    this.uiData.luaClass = "status-error";
+                    this.uiData.luaClass = "statusError";
                     break;
             }
         },
@@ -376,12 +372,12 @@
             try {
                 const result = await targetRoute.handler(msgObj);
 
-                console.log("Res", result);
+                // console.log("Res", result);
                 this.appendLog(`${type} finished, sending...`);
 
                 await this.client.send(result);
             } catch (e) {
-                console.error(e?.message, e?.stack);
+                // console.error(e?.message, e?.stack);
                 this.appendLog(`${type} failed: ${e?.message ?? e}`);
 
                 // last resort
