@@ -159,6 +159,11 @@
                     this.uiData.luaClass = "status-success";
                     break;
 
+                case "timeout":
+                this.uiData.luaText = "Lua Timeout";
+                    this.uiData.luaClass = "status-timeout";
+                    break;
+
                 case "error":
                     this.uiData.luaText = "Lua Fail";
                     this.uiData.luaClass = "status-error";
@@ -194,7 +199,7 @@
                 this.appendLog(`Lua service responded in ${totalTime}ms`);
                 
             } else if (result.state == MailboxState.TIMEOUT) {
-                this.setLuaState("error");
+                this.setLuaState("timeout");
                 this.appendLog(`Lua service ping timeout`);
 
             } else if (result.state == MailboxState.ERROR) {
@@ -371,12 +376,12 @@
             try {
                 const result = await targetRoute.handler(msgObj);
 
-                // console.log("Res", result);
+                console.log("Res", result);
                 this.appendLog(`${type} finished, sending...`);
 
                 await this.client.send(result);
             } catch (e) {
-                // console.error(e?.message, e?.stack);
+                console.error(e?.message, e?.stack);
                 this.appendLog(`${type} failed: ${e?.message ?? e}`);
 
                 // last resort

@@ -46,25 +46,7 @@ export default class Ping {
             };
         }
 
-        try {
-            return await handler.run(this, args);
-        } catch (e) {
-            this.pingingLua = false;
-
-            if (e.message == "Mailbox timeout") {
-                return {
-                    type: Ping.type,
-                    state: MailboxState.TIMEOUT
-                };
-            }
-
-            return {
-                type: Ping.type,
-                state: MailboxState.ERROR,
-                msg: e.message,
-                stack: e.stack
-            };
-        }
+        return await handler.run(this, args);
     }
 
     async pingLua() {
@@ -80,14 +62,30 @@ export default class Ping {
 
         const startTime = Date.now();
 
-        await this.mailbox.request(
-            Ping.type,
-            {},
-            2500
-        );
+        try {
+            await this.mailbox.request(
+                Ping.type,
+                {},
+                2500
+            );
+        } catch (e) {
+            if (e.message == "Mailbox timeout") {
+                return {
+                    type: Ping.type,
+                    state: MailboxState.TIMEOUT
+                };
+            }
 
-        this.pingingLua = false;
-
+            return {
+                type: Ping.type,
+                state: MailboxState.ERROR,
+                msg: e.message,
+                stack: e.stack
+            };
+        } finally {
+            this.pingingLua = false;
+        }
+        
         const endTime = Date.now();
 
         return {
