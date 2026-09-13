@@ -101,7 +101,7 @@ If an activity reports an error, `msg` and `stack` get added instead of `res`.
 | Module Compatibility | `modules` | Check if a module is available to use and its functions |
 | Miscellaneous | `misc` | Misc utilities |
 
-Refer to [DevBox docs](addThisAfterItsDone) for available arguments.
+Refer to [DevBox docs](https://github.com/Sucharek233/MiBand-DevBox/tree/master/docs) for available arguments.
 
 ## Adding an Activity
 1. Create the activity module under `src/router/activities/lua` or `src/router/activities/qjs`
