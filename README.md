@@ -103,6 +103,8 @@ Refer to [DevBox docs](addThisAfterItsDone) for available arguments.
 | Module Compatibility | `modules` | Check if a module is available to use and its functions |
 | Miscellaneous | `misc` | Misc utilities |
 
+Refer to [DevBox docs](addThisAfterItsDone) for available arguments.
+
 ## Adding an Activity
 1. Create the activity module under `src/router/activities/lua` or `src/router/activities/qjs`
 2. Give it a unique static `type` value and a static `needsScreenOn` value
@@ -119,4 +121,4 @@ npx aiot release --enable-jsc
 ```
 
 ## License
-This project is licensed under the GPL v3.0. See [LICENSE](LICENSE) for the full license text.
+This project is licensed under the GPL v3.0 license.
