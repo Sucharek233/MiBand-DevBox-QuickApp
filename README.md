@@ -23,6 +23,8 @@ When a request is being handled, the app displays a screen saver overlay.
 6. The QuickApp sends the result back through interconnect
 7. If an activity fails, the QuickApp records the error and sends it back over interconnect
 
+**Mi Fitness mod is required for this to work!**
+
 The mailbox state is stored at `internal://files/state`. Requests that use the Lua service must be supported by the corresponding activity in that service.
 
 ## Mailbox States
