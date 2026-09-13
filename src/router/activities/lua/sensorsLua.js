@@ -119,7 +119,7 @@ export default class SensorsLua {
             return {
                 type: SensorsLua.type,
                 state: MailboxState.ERROR,
-                result: result.res
+                res: result.res
             };
         }
 
@@ -135,7 +135,7 @@ export default class SensorsLua {
         return {
             type: SensorsLua.type,
             state: result.appState,
-            result: result.res
+            res: result.res
         };
     }
 
@@ -160,7 +160,7 @@ export default class SensorsLua {
         return {
             type: SensorsLua.type,
             state: result.appState,
-            result: result.res
+            res: result.res
         };
     }
 

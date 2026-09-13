@@ -79,8 +79,6 @@ If an activity reports an error, `msg` and `stack` get added instead of `res`.
 }
 ```
 
-Refer to [DevBox docs](addThisAfterItsDone) for available arguments.
-
 ## Available Activities
 
 ### Lua

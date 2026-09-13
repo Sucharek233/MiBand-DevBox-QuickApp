@@ -65,8 +65,8 @@ class PromiseDevice {
     // isn't an official function
     // returns total, available and used storage in bytes
     async getStorageOverview() {
-        const total = await this.getTotalStorage();
-        const available = await this.getAvailableStorage();
+        const total = Number(await this.getTotalStorage());
+        const available = Number(await this.getAvailableStorage());
         const used = total - available;
 
         return {
