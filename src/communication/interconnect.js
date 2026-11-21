@@ -49,34 +49,50 @@ export default class InterconnectClient {
             throw new Error("Connection already in progress.");
         }
 
-        if (!app.canIUse("@system.interconnect")) {
+        if (typeof app.canIUse === "function" && !app.canIUse("@system.interconnect")) {
             throw new Error("Interconnect API unavailable.");
         }
 
+        if (typeof interconnect.instance !== "function") {
+            throw new Error("Interconnect instance API unavailable.");
+        }
+
         this.connecting = true;
-        this.conn = interconnect.instance();
+        try {
+            this.conn = interconnect.instance();
+            if (!this.conn) {
+                throw new Error("Interconnect returned no connection.");
+            }
 
-        this.installHandlers();
-
-        this.waitForConnection();
-
-        // this.connecting = false;
+            this.installHandlers();
+            if (typeof this.conn.getReadyState === "function") {
+                this.waitForConnection();
+            } else {
+                this.log("Readiness query unavailable; waiting for connection events.");
+            }
+        } catch (error) {
+            this.connecting = false;
+            throw error;
+        }
     }
 
     installHandlers() {
         this.conn.onopen = () => {
+            this.connecting = false;
             this.connected = true;
             this.log("Connected.");
             this.openHandler();
         };
 
         this.conn.onclose = (data) => {
+            this.connecting = false;
             this.connected = false;
             this.log("Disconnected.");
             this.closeHandler(data);
         };
 
         this.conn.onerror = (err) => {
+            this.connecting = false;
             this.log("Error:", err);
             this.errorHandler(err);
         };
@@ -135,6 +151,7 @@ export default class InterconnectClient {
 
         this.conn.destroy?.();
         this.conn = null;
+        this.connecting = false;
         this.connected = false;
         this.log("Destroyed.");
     }
